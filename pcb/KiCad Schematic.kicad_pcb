@@ -2,7 +2,7 @@
 
   (general
     (thickness 1.6)
-    (drawings 42)
+    (drawings 44)
     (tracks 1380)
     (zones 0)
     (modules 90)
@@ -804,7 +804,7 @@
     (tags "QFN DFN_QFN")
     (path /5F6ACEB1)
     (attr smd)
-    (fp_text reference IC2 (at 0 -5.82 135) (layer F.SilkS)
+    (fp_text reference IC2 (at 0 -5.819999 135) (layer F.SilkS) hide
       (effects (font (size 1 1) (thickness 0.15)))
     )
     (fp_text value ATSAMD51J19A-MU (at 0 5.82 135) (layer F.Fab)
@@ -1806,8 +1806,8 @@
     (tags resistor)
     (path /5F7DF8BF)
     (attr smd)
-    (fp_text reference R14 (at 2.1625 0 90) (layer F.SilkS)
-      (effects (font (size 1 1) (thickness 0.15)))
+    (fp_text reference R14 (at 1.9125 0 90) (layer F.SilkS)
+      (effects (font (size 0.7 0.7) (thickness 0.1)))
     )
     (fp_text value 174 (at 0 1.43) (layer F.Fab)
       (effects (font (size 1 1) (thickness 0.15)))
@@ -3826,7 +3826,7 @@
     (tags "QFN DFN_QFN")
     (path /5F78844A)
     (attr smd)
-    (fp_text reference U1 (at 4 -4.8 90) (layer F.SilkS)
+    (fp_text reference U1 (at 4 -4.8 90) (layer F.SilkS) hide
       (effects (font (size 1 1) (thickness 0.15)))
     )
     (fp_text value TMC2041-LA (at 0 4.8 90) (layer F.Fab)
@@ -4545,7 +4545,13 @@
     )
   )
 
-  (gr_text "\"2 potatoes don't\nmake a potato\"\n-George Washington" (at 19.7 136.3) (layer B.SilkS)
+  (gr_text G1 (at 21.55 188.05) (layer F.SilkS) (tstamp 5F7A1BF4)
+    (effects (font (size 1 1) (thickness 0.2)))
+  )
+  (gr_text G0 (at 20 173.35) (layer F.SilkS) (tstamp 5F7A1BF4)
+    (effects (font (size 1 1) (thickness 0.2)))
+  )
+  (gr_text "\"I really like ceilings...\nI guess you could call\nme a ceiling fan\"\n-Unknown" (at 19.7 136.3) (layer B.SilkS)
     (effects (font (size 1.5 1.5) (thickness 0.25)) (justify right mirror))
   )
   (gr_text 1.0 (at 50.5 153.45) (layer F.SilkS)
