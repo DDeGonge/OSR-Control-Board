@@ -23,7 +23,7 @@ menu.debug=Debug
 
 # OSR Board (SAMD51)
 # ------------------------------
-osr_board.name=OSR Board (SAMD51)
+osr_board.name=OSR V1 Board (SAMD51)
 osr_board.vid.0=0x239A
 osr_board.pid.0=0x8022
 osr_board.vid.1=0x239A
@@ -39,17 +39,17 @@ osr_board.build.mcu=cortex-m4
 #osr_board.build.f_cpu=120000000L
 osr_board.build.usb_product="OSR Board"
 osr_board.build.usb_manufacturer="YouTube.com/3DprintedLife"
-osr_board.build.board=OSR
+osr_board.build.board=OSR_V1
 osr_board.build.core=arduino
 osr_board.build.extra_flags=-D__SAMD51J19A__ -DADAFRUIT_FEATHER_M4_EXPRESS -D__SAMD51__ {build.usb_flags} -D__FPU_PRESENT -DARM_MATH_CM4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
-osr_board.build.ldscript=linker_scripts/gcc/flash_with_bootloader.ld
+osr_board.build.ldscript=linker_scripts/gcc/flash_without_bootloader.ld
 osr_board.build.openocdscript=openocd_scripts/arduino_zero.cfg
-osr_board.build.variant=osr
+osr_board.build.variant=osr_v1
 osr_board.build.variant_system_lib=
 osr_board.build.vid=0x239A
 osr_board.build.pid=0x8022
-osr_board.bootloader.tool=openocd
-osr_board.bootloader.file=featherM4/bootloader-feather_m4-v2.0.0-adafruit.5.bin
+# osr_board.bootloader.tool=openocd
+# osr_board.bootloader.file=featherM4/bootloader-feather_m4-v2.0.0-adafruit.5.bin
 osr_board.compiler.arm.cmsis.ldflags="-L{runtime.tools.CMSIS-5.4.0.path}/CMSIS/Lib/GCC/" "-L{build.variant.path}" -larm_cortexM4lf_math -mfloat-abi=hard -mfpu=fpv4-sp-d16 
 osr_board.menu.cache.on=Enabled
 osr_board.menu.cache.on.build.cache_flags=-DENABLE_CACHE

@@ -16,8 +16,8 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef _VARIANT_FEATHER_M4_
-#define _VARIANT_FEATHER_M4_
+#ifndef _VARIANT_OSR_V1_
+#define _VARIANT_OSR_V1_
 
 // The definitions here needs a SAMD core >=1.6.10
 #define ARDUINO_SAMD_VARIANT_COMPLIANCE 10610
@@ -86,7 +86,7 @@ extern "C"
 /*
  * Analog pins
  */
-// #define PIN_A0               (26ul)
+#define PIN_A0               (46ul)
 // #define PIN_A1               (PIN_A0 + 1)
 // #define PIN_A2               (PIN_A0 + 2)
 // #define PIN_A3               (PIN_A0 + 3)
@@ -95,9 +95,9 @@ extern "C"
 // #define PIN_A6               (PIN_A0 + 6)
 
 #define PIN_DAC0             (11ul)
-// #define PIN_DAC1             PIN_A1
+#define PIN_DAC1             (47ul)
 
-// static const uint8_t A0  = PIN_A0;
+static const uint8_t A0  = PIN_A0;
 // static const uint8_t A1  = PIN_A1;
 // static const uint8_t A2  = PIN_A2;
 // static const uint8_t A3  = PIN_A3;
@@ -106,7 +106,7 @@ extern "C"
 // static const uint8_t A6  = PIN_A6 ;
 
 static const uint8_t DAC0 = PIN_DAC0;
-// static const uint8_t DAC1 = PIN_DAC1;
+static const uint8_t DAC1 = PIN_DAC1;
 
 #define ADC_RESOLUTION		12
 
