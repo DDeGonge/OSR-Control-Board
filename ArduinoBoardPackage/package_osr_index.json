@@ -4,7 +4,7 @@
     {
       "name": "osr",
       "maintainer": "Andrew DeGonge - 3DprintedLife",
-      "websiteURL": "https://roboticsmasters.co",
+      "websiteURL": "https://github.com/DDeGonge/OSR-Control-Board",
       "email" : "3dprintedlife@gmail.com",
       "platforms":
       [
