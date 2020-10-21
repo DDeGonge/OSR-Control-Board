@@ -13,7 +13,7 @@
           "architecture": "samd",
           "version": "1.0.0",
           "category": "Contributed",
-          "url": "https://github.com/DDeGonge/OSR-Control-Board/blob/master/ArduinoBoardPackage/OSR-1.0.0.zip",
+          "url": "https://github.com/DDeGonge/OSR-Control-Board/raw/master/ArduinoBoardPackage/OSR-1.0.0.zip",
           "archiveFileName": "OSR-1.0.0.zip",
           "checksum": "SHA-256:9ce88b2709382c45c20358775ccc75b730ee7543c47c389f0e2c26faad10c6a0",
           "size": "1155758",
