@@ -18,8 +18,8 @@ TMC2041::TMC2041(uint8_t en_pin, uint8_t cs_pin, uint8_t step0_pin, uint8_t step
     write_all();
 
     // Configure contained steppers
-    step0.set_pins(step0_pin, dir0_pin);
-    step1.set_pins(step1_pin, dir1_pin);
+    motor0.set_pins(step0_pin, dir0_pin);
+    motor1.set_pins(step1_pin, dir1_pin);
 }
 
 // Public - enable stepper driver
@@ -74,36 +74,36 @@ int32_t TMC2041::read_cmd(uint8_t addr)
     return out;
 }
 
-void write_gconf()
+void TMC2041::write_gconf()
 {
     write_cmd(a_gconf, gconf);
 }
 
-void write_iholdirun(uint8_t motor_index)
+void TMC2041::write_iholdirun(uint8_t motor_index)
 {
     if (motor_index == 0)
-        write_cmd(a_iholdirun[0], step0.ihold);
+        write_cmd(a_iholdirun[0], motor0.ihold);
     else if (motor_index == 1)
-        write_cmd(a_iholdirun[1], step1.ihold);
+        write_cmd(a_iholdirun[1], motor1.ihold);
 }
 
-void write_chop(uint8_t motor_index)
+void TMC2041::write_chop(uint8_t motor_index)
 {
     if (motor_index == 0)
-        write_cmd(a_chop[0], step0.chop);
+        write_cmd(a_chop[0], motor0.chop);
     else if (motor_index == 1)
-        write_cmd(a_chop[1], step1.chop);
+        write_cmd(a_chop[1], motor1.chop);
 }
 
-void write_cool(uint8_t motor_index)
+void TMC2041::write_cool(uint8_t motor_index)
 {
     if (motor_index == 0)
-        write_cmd(a_cool[0], step0.cool);
+        write_cmd(a_cool[0], motor0.cool);
     else if (motor_index == 1)
-        write_cmd(a_cool[1], step1.cool);
+        write_cmd(a_cool[1], motor1.cool);
 }
 
-void write_all()
+void TMC2041::write_all()
 {
     write_gconf();
     for(uint8_t i = 0; i < 2; i++)
@@ -149,9 +149,11 @@ uint8_t TMCstep::get_index()
 
 void TMCstep::step()
 {
-    digitalWrite(STEP_PIN, HIGH)
+    digitalWrite(STEP_PIN, HIGH);
     delayMicroseconds(step_pulse_len_us);
-    digitalWrite(STEP_PIN, LOW)
+    digitalWrite(STEP_PIN, LOW);
+
+    step_count = motor_dir ? step_count + 1 : step_count - 1;
 }
 
 int32_t TMCstep::get_step()
@@ -161,11 +163,15 @@ int32_t TMCstep::get_step()
 
 void TMCstep::set_dir(bool dir)
 {
-    direction = dir;
+    motor_dir = dir;
+    if (motor_dir)
+        digitalWrite(DIR_PIN, HIGH);
+    else
+        digitalWrite(DIR_PIN, LOW);
 }
 
 bool TMCstep::get_dir()
 {
-    return direction;
+    return motor_dir;
 }
 
