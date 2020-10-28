@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include <SPI.h>
 
+#define NOVALUE 999999
+
+
 /* Stepper object */
 struct TMCstep
 {
@@ -76,11 +79,9 @@ struct TMC2041
 /* Stepper motor wrapper to handle motion profiles */
 struct motorDrive
 {
-    motorDrive(TMCstep new_stepper);
+    motorDrive(TMCstep &new_stepper);
 
     public:
-    void enable();
-    void disable();
     void update_config(int32_t steps_per_mm_new, float max_vel_new, float max_accel_new);
     void set_current_pos_mm(double target);
     void set_pos_target_mm_async(double target, float feedrate);
@@ -88,6 +89,7 @@ struct motorDrive
     bool step_if_needed();
     double get_current_pos_mm();
     double get_current_vel_mmps();
+    void zero();
 
     private:
     TMCstep stepper;

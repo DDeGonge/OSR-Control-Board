@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include "OSR.h"
 
-#define NOVALUE 999999
 
 TMC2041::TMC2041(uint8_t en_pin, uint8_t cs_pin, uint8_t step0_pin, uint8_t step1_pin, uint8_t dir0_pin, uint8_t dir1_pin)
 {
@@ -183,21 +182,9 @@ bool TMCstep::get_dir()
 
 
 // Constructor
-motorDrive::motorDrive(TMCstep new_stepper)
+motorDrive::motorDrive(TMCstep &new_stepper)
 {
     stepper = new_stepper;
-}
-
-// Public - enable stepper motor
-void motorDrive::enable()
-{
-    stepper.enable();
-}
-
-// Public - disable stepper motor
-void motorDrive::disable()
-{
-    stepper.disable();
 }
 
 // Public - Update stepper parameters. Feed NOVALUE to not change any particular parameter
@@ -224,7 +211,7 @@ void motorDrive::set_current_pos_mm(double target)
 }
 
 // Public - Update target position in mm. Respects present joint momentum.
-void motorDrive::set_pos_target_mm_async(double target, float feedrate)
+void motorDrive::set_pos_target_mm_async(double target, float feedrate = NOVALUE)
 {
     target_mm = target;
     next_step_us = micros();
@@ -233,7 +220,7 @@ void motorDrive::set_pos_target_mm_async(double target, float feedrate)
 }
 
 // Public - Update target position in mm. Respects present joint momentum. Will stay in loop until move is compelte
-void motorDrive::set_pos_target_mm_sync(double target, float feedrate)
+void motorDrive::set_pos_target_mm_sync(double target, float feedrate = NOVALUE)
 {
     set_pos_target_mm_async(target, feedrate);
     while(true)
@@ -263,7 +250,7 @@ bool motorDrive::step_if_needed()
 
         uint32_t cur_step_us = next_step_us;
         double stop_dist_mm = pow(current_velocity, 2) / (max_accel);
-        double stop_pos_mm = current_step_count / steps_per_rev;
+        double stop_pos_mm = current_step_count / steps_per_mm;
 
         // This mess determines if we need to slow down
         if((current_dir && ((stop_pos_mm + stop_dist_mm) > target_mm)) || (!current_dir && ((stop_pos_mm - stop_dist_mm) < target_mm)))
@@ -348,4 +335,9 @@ void motorDrive::quad_solve(double &t_0, double &t_1, double a, double b, double
     double temp1 = sqrt(pow(b, 2) + 2 * a * c);
     t_0 = (temp0 + temp1) / a;
     t_1 = (temp0 - temp1) / a;
+}
+
+void motorDrive::zero()
+{
+    set_current_pos_mm(0);
 }
