@@ -7,15 +7,13 @@
 /* Stepper object */
 struct TMCstep
 {
-    TMCstep(uint8_t index);
-    TMCstep(uint8_t index, uint8_t step_pin, uint8_t dir_pin);
-
     public:
     void set_pins(uint8_t step_pin, uint8_t dir_pin);
     void set_index(uint8_t index);
     uint8_t get_index();
 
     void step();
+    void set_step(int32_t steps);
     int32_t get_step();
     void set_dir(bool dir);
     bool get_dir();
@@ -46,8 +44,8 @@ struct TMC2041
     void enable();
     void disable();
 
-    TMCstep motor0 = TMCstep(0);
-    TMCstep motor1 = TMCstep(1);
+    TMCstep motor0;
+    TMCstep motor1;
 
     /* Driver com functions */
     void write_gconf();
@@ -84,8 +82,8 @@ struct motorDrive
     public:
     void update_config(int32_t steps_per_mm_new, float max_vel_new, float max_accel_new);
     void set_current_pos_mm(double target);
-    void set_pos_target_mm_async(double target, float feedrate);
-    void set_pos_target_mm_sync(double target, float feedrate);
+    void set_pos_target_mm_async(double target, float feedrate = NOVALUE);
+    void set_pos_target_mm_sync(double target, float feedrate = NOVALUE);
     bool step_if_needed();
     double get_current_pos_mm();
     double get_current_vel_mmps();
@@ -95,10 +93,10 @@ struct motorDrive
     TMCstep stepper;
 
     // Configuration
-    float steps_per_mm = 3200;
+    float steps_per_mm = 5120;
     float max_vel = 50;
     float max_accel = 50;
-    float step_size_mm = 1 / steps_per_mm;
+    float step_size_mm;
 
     // Backend funcs
     void quad_solve(double &t_0, double &t_1, double a, double b, double c);
@@ -107,9 +105,7 @@ struct motorDrive
     double target_mm = 0;
 
     // Motion tracking vars
-    bool current_dir = false;
     double current_velocity = 0;
-    int32_t current_step_count = 0;
     double diff_exact_us = 0;
     uint32_t last_step_us = 0;
     uint32_t next_step_us = 0;
