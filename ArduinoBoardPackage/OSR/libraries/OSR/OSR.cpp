@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "OSR.h"
 
+#define NOVALUE 999999
+
 TMC2041::TMC2041(uint8_t en_pin, uint8_t cs_pin, uint8_t step0_pin, uint8_t step1_pin, uint8_t dir0_pin, uint8_t dir1_pin)
 {
     // Save and set up CS and enable pins
@@ -163,11 +165,14 @@ int32_t TMCstep::get_step()
 
 void TMCstep::set_dir(bool dir)
 {
-    motor_dir = dir;
-    if (motor_dir)
-        digitalWrite(DIR_PIN, HIGH);
-    else
-        digitalWrite(DIR_PIN, LOW);
+    if (motor_dir != dir)
+    {
+        motor_dir = dir;
+        if (motor_dir)
+            digitalWrite(DIR_PIN, HIGH);
+        else
+            digitalWrite(DIR_PIN, LOW);
+    }
 }
 
 bool TMCstep::get_dir()
@@ -175,3 +180,172 @@ bool TMCstep::get_dir()
     return motor_dir;
 }
 
+
+
+// Constructor
+motorDrive::motorDrive(TMCstep new_stepper)
+{
+    stepper = new_stepper;
+}
+
+// Public - enable stepper motor
+void motorDrive::enable()
+{
+    stepper.enable();
+}
+
+// Public - disable stepper motor
+void motorDrive::disable()
+{
+    stepper.disable();
+}
+
+// Public - Update stepper parameters. Feed NOVALUE to not change any particular parameter
+void motorDrive::update_config(int32_t steps_per_mm_new, float max_vel_new, float max_accel_new)
+{
+    if (max_vel_new != NOVALUE)
+        max_vel = max_vel_new;
+    if (max_accel_new != NOVALUE)
+        max_accel = max_accel_new;
+    if (steps_per_mm_new != NOVALUE)
+    {
+        steps_per_mm = steps_per_mm_new;
+        step_size_mm = 1 / steps_per_mm;
+    }
+}
+
+// Public - Overwrite the current position to be any mm value designated
+void motorDrive::set_current_pos_mm(double target)
+{
+    target = target == NOVALUE ? 0 : target;
+    double working_count = target * steps_per_mm;
+    working_count += 0.4999; // For the rounding
+    current_step_count = (int32_t) working_count;
+}
+
+// Public - Update target position in mm. Respects present joint momentum.
+void motorDrive::set_pos_target_mm_async(double target, float feedrate)
+{
+    target_mm = target;
+    next_step_us = micros();
+    if (feedrate != NOVALUE)
+        max_vel = feedrate;
+}
+
+// Public - Update target position in mm. Respects present joint momentum. Will stay in loop until move is compelte
+void motorDrive::set_pos_target_mm_sync(double target, float feedrate)
+{
+    set_pos_target_mm_async(target, feedrate);
+    while(true)
+    {
+        if(!step_if_needed())
+            break;
+    }
+}
+
+// Public - The magic sauce. Tracks motor motion and calculates if a step is needed now to stay on track.
+bool motorDrive::step_if_needed()
+{
+    uint32_t t_now = micros();
+    int32_t step_target = (steps_per_mm * target_mm);
+
+    // Check if motor is in right place already
+    if((abs(current_velocity) < 0.001) && (step_target == current_step_count))
+        return false;
+    else if((abs(current_velocity) < 0.001) && (current_step_count > step_target))
+        stepper.set_dir(false);
+    else if((abs(current_velocity) < 0.001) && (current_step_count < step_target))
+        stepper.set_dir(true);
+    
+    if(micros() > next_step_us)
+    {
+        stepper.step();
+
+        uint32_t cur_step_us = next_step_us;
+        double stop_dist_mm = pow(current_velocity, 2) / (max_accel);
+        double stop_pos_mm = current_step_count / steps_per_rev;
+
+        // This mess determines if we need to slow down
+        if((current_dir && ((stop_pos_mm + stop_dist_mm) > target_mm)) || (!current_dir && ((stop_pos_mm - stop_dist_mm) < target_mm)))
+        {
+            // First check if we are coming to a stop
+            if((pow(current_velocity, 2) - 2 * max_accel * step_size_mm) < 0)
+            {
+                // See if we should turn round
+                if(current_step_count > step_target)
+                {
+                next_step_us = (2 * next_step_us) - last_step_us;
+                stepper.set_dir(false);
+                }
+                else if(current_step_count < step_target)
+                {
+                next_step_us = (2 * next_step_us) - last_step_us;
+                stepper.set_dir(true);
+                }
+                else
+                {
+                next_step_us = 4294967294;
+                diff_exact_us = 4294967294;
+                }
+            }
+
+            // Otherwise just decelerate normally
+            else
+            {
+                double t0, t1;
+                quad_solve(t0, t1, -max_accel, current_velocity, step_size_mm);
+                double next_step_temp = 1000000 * min(t0, t1);
+                diff_exact_us = next_step_temp;
+                next_step_us = (uint32_t) (next_step_temp + 0.5);
+                next_step_us += cur_step_us;
+            }
+        }
+
+        // Otherwise check if we can speed up
+        else if(abs(current_velocity) < max_vel)
+        {
+            // Quadratic has 2 roots, only use one that results in positive time
+            double t0, t1;
+            quad_solve(t0, t1, max_accel, current_velocity, step_size_mm);
+            double next_step_temp = 1000000 * max(t0, t1);
+            diff_exact_us = next_step_temp;
+            next_step_us = (uint32_t) (next_step_temp + 0.5);
+            next_step_us += cur_step_us;
+        }
+
+        // Last resort is maintain max speed
+        else
+        {
+            next_step_us += 1000000 * step_size_mm / max_vel;
+        }
+
+        // Update current motor velocity
+        current_velocity = step_size_mm * 1000000;
+        current_velocity /= diff_exact_us;
+        current_velocity = current_dir ? current_velocity : -current_velocity;
+        current_velocity = abs(current_velocity) < 0.01 ? 0 : current_velocity;
+        last_step_us = cur_step_us;
+    }
+    return true;
+}
+
+// Public - Return current position in mm
+double motorDrive::get_current_pos_mm()
+{
+    return current_step_count / steps_per_mm;
+}
+
+// Public - Return current velocity in mm/sec
+double motorDrive::get_current_vel_mmps()
+{
+    return current_velocity;
+}
+
+// Private - Quadratic equation yo
+void motorDrive::quad_solve(double &t_0, double &t_1, double a, double b, double c)
+{
+    double temp0 = -abs(b);
+    double temp1 = sqrt(pow(b, 2) + 2 * a * c);
+    t_0 = (temp0 + temp1) / a;
+    t_1 = (temp0 - temp1) / a;
+}
