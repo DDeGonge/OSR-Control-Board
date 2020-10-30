@@ -117,6 +117,15 @@ void TMC2041::write_all()
     }
 }
 
+void TMC2041::update_driver_status(uint8_t motor_index)
+{
+    int32_t new_status = read_cmd(a_status[motor_index]);
+    if (motor_index == 0)
+        motor0.update_status(new_status);
+    else if (motor_index == 1)
+        motor1.update_status(new_status);
+}
+
 
 void TMCstep::set_pins(uint8_t step_pin, uint8_t dir_pin)
 {
@@ -174,28 +183,33 @@ bool TMCstep::get_dir()
     return motor_dir;
 }
 
+void TMCstep::update_status(uint32_t new_status)
+{
+    status_bits = new_status;
+}
+
 
 
 // Constructor
-motorDrive::motorDrive(TMCstep &new_stepper)
+motorDrive::motorDrive(TMCstep &new_stepper, int32_t steps_per_mm_new)
 {
     stepper = new_stepper;
+    steps_per_mm = steps_per_mm_new;
     step_size_mm = 1 / steps_per_mm;
-    Serial.println(step_size_mm, 10);
 }
 
-// Public - Update stepper parameters. Feed NOVALUE to not change any particular parameter
-void motorDrive::update_config(int32_t steps_per_mm_new, float max_vel_new, float max_accel_new)
+// Public - Update stepper default velocity in mm/s if input is not NOVALUE
+void motorDrive::set_default_vel_mmps(float max_vel_new)
 {
     if (max_vel_new != NOVALUE)
         max_vel = max_vel_new;
+}
+
+// Public - Update stepper default acceleration in mm/s^2 if input is not NOVALUE
+void motorDrive::set_default_acc_mmps2(float max_accel_new)
+{
     if (max_accel_new != NOVALUE)
         max_accel = max_accel_new;
-    if (steps_per_mm_new != NOVALUE)
-    {
-        steps_per_mm = steps_per_mm_new;
-        step_size_mm = 1 / steps_per_mm;
-    }
 }
 
 // Public - Overwrite the current position to be any mm value designated
@@ -217,15 +231,133 @@ void motorDrive::set_pos_target_mm_async(double target, float feedrate)
         max_vel = feedrate;
 }
 
-// Public - Update target position in mm. Respects present joint momentum. Will stay in loop until move is compelte
+// Public - Plan and execute acceleration profile Will stay in loop until move is complete
 void motorDrive::set_pos_target_mm_sync(double target, float feedrate)
 {
-    set_pos_target_mm_async(target, feedrate);
-    while(true)
+    plan_move(target, feedrate);
+    execute_move_async();
+    while (true)
     {
-        if(!step_if_needed())
-            break;
+        if(async_move_step_check(micros()))
+            return;
     }
+}
+
+// Public - Creates and stores move plan to later be executed asynchronously
+void motorDrive::plan_move(double target, float feedrate)
+{
+    float maxvel = feedrate == NOVALUE ? max_vel : feedrate / 60;
+    int32_t step_target = target * steps_per_mm;
+    // Set stepper turn direction
+    if((step_target - stepper.get_step()) < 0)
+        stepper.set_dir(false);
+    else
+        stepper.set_dir(true);
+
+    // Calculate some motion paramters
+    plan_nsteps = abs(step_target - stepper.get_step());
+    float accel_dist = (pow(maxvel, 2) / (2 * max_accel));
+    float move_dist = abs(target - (stepper.get_step() / steps_per_mm));
+
+    // Determine if move will be all accelerations or if it will have plateau
+    if(abs(2 * accel_dist) < move_dist)
+    {
+        plan_tmin = (1000000 * step_size_mm) / maxvel;
+        plan_asteps = steps_per_mm * accel_dist;
+    }
+    else
+    {
+        plan_tmin = 0;
+        plan_asteps = floor(plan_nsteps / 2);
+    }
+
+    // Serial.print("accel_dist");
+    // Serial.println(accel_dist);
+    // Serial.print("move_dist");
+    // Serial.println(move_dist);
+    // Serial.print("plan_tmin");
+    // Serial.println(plan_tmin);
+    // Serial.print("plan_asteps");
+    // Serial.println(plan_asteps);
+    // Serial.print("plan_nsteps");
+    // Serial.println(plan_nsteps);
+
+    // Construct acceleration ramp timings
+    plan_accel_timings.clear();
+    int32_t next_target_delta_us = 0;
+    int32_t totaltime_us = 0;
+    float v_now = 0;
+    for(int i = 0; i < plan_asteps; i++)
+    {
+        next_target_delta_us = solve_for_t_us(v_now, max_accel, step_size_mm);
+        plan_accel_timings.push_back(next_target_delta_us);
+        totaltime_us += next_target_delta_us;
+        v_now = (totaltime_us * max_accel) / 1000000;
+    }
+}
+
+// Public - Start asynchronous move, requires motion plan and calling async_move_step_check frequently
+void motorDrive::execute_move_async()
+{
+    plan_stepstaken = 1;
+    plan_nextstep_us = micros() + plan_accel_timings[0];
+    stepper.step();
+}
+
+// Public - Take a step if ready. Call this in a loop until it returns true
+bool motorDrive::async_move_step_check(uint32_t t_now)
+{
+    if (plan_stepstaken >= plan_nsteps)
+        return true;
+    else if (t_now > plan_nextstep_us)
+    {
+        // Accelerating
+        if (plan_stepstaken < plan_asteps)
+        {
+            plan_nextstep_us += plan_accel_timings[plan_stepstaken];
+        }
+        // Decelerating
+        else if (plan_stepstaken >= (plan_nsteps - plan_asteps))
+        {
+            plan_nextstep_us += plan_accel_timings[plan_nsteps - plan_stepstaken - 1];
+        }
+        // Constant vel no plateau
+        else if (plan_tmin == 0)
+        {
+            plan_nextstep_us += plan_accel_timings[plan_asteps - 1];
+        }
+        // Constant vel with plateau
+        else
+        {
+            plan_nextstep_us += plan_tmin; // TODO keep track of tmin error for more accurate velocities
+        } 
+        stepper.step();
+        plan_stepstaken++;
+    }
+    return false;
+}
+
+// Private - Kinematic equation solving for time
+int32_t motorDrive::solve_for_t_us(float v, float a, float d)
+{
+    float t = -v;
+    if(v >= 0)
+    {
+        t += sqrt(pow(v, 2) + 2 * a * d);
+        t /= a;
+    }
+    else
+    {
+        t -= sqrt(pow(v, 2) - 2 * a * d);
+        t /= a;
+    }
+    t *= 1000000;
+    t = (int32_t)(t - 1); // Subtract 1 to account for the time of the step pulse
+    if(t > 50000)
+    {
+        return 50000;
+    }
+    return t;
 }
 
 // Public - The magic sauce. Tracks motor motion and calculates if a step is needed now to stay on track.
@@ -234,9 +366,9 @@ bool motorDrive::step_if_needed()
     uint32_t t_now = micros();
     int32_t step_target = (steps_per_mm * target_mm);
 
-    // Serial.print(step_target);
-    // Serial.print("\t");
     // Serial.print(stepper.get_step());
+    // Serial.print("\t");
+    // Serial.print(t_now);
     // Serial.print("\t");
     // Serial.print(next_step_us);
     // Serial.print("\n");
