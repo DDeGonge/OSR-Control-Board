@@ -16,8 +16,8 @@ void loop() {
   Serial.println("Initializing motor drives for 320 microsteps per mm");
   motorDrive step0 = motorDrive(Driver0.motor0, 320);
   motorDrive step1 = motorDrive(Driver0.motor1, 320);
-  motorDrive step2 = motorDrive(Driver1.motor0, 320);
-  motorDrive step3 = motorDrive(Driver1.motor1, 320);
+  motorDrive step2 = motorDrive(Driver1.motor1, 320);
+  motorDrive step3 = motorDrive(Driver1.motor0, 320);
 
   Serial.println("Updating default motor velocities and accelerations to various values");
   step0.set_default_vel_mmps(150);
