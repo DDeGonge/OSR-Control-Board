@@ -222,10 +222,16 @@ void motorDrive::set_current_pos_mm(double target)
     stepper.set_step(current_step_count);
 }
 
+// Public - Set softstop limit for linear drive
+void motorDrive::set_max_move_dist_mm(float new_lim_mm)
+{
+    max_dist_mm = new_lim_mm;
+}
+
 // Public - Update target position in mm. Respects present joint momentum.
 void motorDrive::set_pos_target_mm_async(double target, float feedrate)
 {
-    target_mm = target;
+    target_mm = check_target(target);
     next_step_us = micros();
     if (feedrate != NOVALUE)
         max_vel = feedrate;
@@ -244,10 +250,11 @@ void motorDrive::set_pos_target_mm_sync(double target, float feedrate)
 }
 
 // Public - Creates and stores move plan to later be executed asynchronously
-void motorDrive::plan_move(double target, float feedrate)
+void motorDrive::plan_move(double target, float feedrate, bool ignore_limits)
 {
     float maxvel = feedrate == NOVALUE ? max_vel : feedrate / 60;
-    int32_t step_target = target * steps_per_mm;
+    double clean_target = ignore_limits ? target : check_target(target);
+    int32_t step_target = clean_target * steps_per_mm;
     // Set stepper turn direction
     if((step_target - stepper.get_step()) < 0)
         stepper.set_dir(false);
@@ -257,7 +264,7 @@ void motorDrive::plan_move(double target, float feedrate)
     // Calculate some motion paramters
     plan_nsteps = abs(step_target - stepper.get_step());
     float accel_dist = (pow(maxvel, 2) / (2 * max_accel));
-    float move_dist = abs(target - (stepper.get_step() / steps_per_mm));
+    float move_dist = abs(clean_target - (stepper.get_step() / steps_per_mm));
 
     // Determine if move will be all accelerations or if it will have plateau
     if(abs(2 * accel_dist) < move_dist)
@@ -465,6 +472,33 @@ double motorDrive::get_current_vel_mmps()
     return current_velocity;
 }
 
+// Public - Sensorless homing
+// bool motorDrive::home(bool to_min)
+// {
+//     if (to_min)
+//         stepper.set_dir(false);
+//     else
+//         stepper.set_dir(true);
+
+//     uint32_t steptime = 1000000 * step_size_mm / home_vel;
+//     uint32_t stepcount = 0;
+//     uint32_t nextstep = micros() + steptime;
+
+//     while (true)
+//     {
+//         stepper.step();
+//         stepcount += 1;
+
+//         while (micros() < nextstep);
+
+//         nextstep += steptime;
+//         if (stepcount % 16 == 0)
+//         {
+//             // stepper.update_driver_status(stepper.get_index());
+//         }
+//     }
+// }
+
 // Private - Quadratic equation yo
 void motorDrive::quad_solve(double &t_0, double &t_1, double a, double b, double c)
 {
@@ -474,6 +508,16 @@ void motorDrive::quad_solve(double &t_0, double &t_1, double a, double b, double
     t_1 = (temp0 - temp1) / a;
 }
 
+// Private - Filter move target to ensure valid and not below min (0) or above max(max_dist_mm)
+double motorDrive::check_target(double target)
+{
+    target = target == NOVALUE ? target_mm : target;
+    target = target < 0 ? 0 : target;
+    target = target > max_dist_mm ? 0 : max_dist_mm;
+    return target;
+}
+
+// Public - Set current position to zero
 void motorDrive::zero()
 {
     set_current_pos_mm(0);

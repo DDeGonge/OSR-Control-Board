@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <vector>
+#include <iostream>
 
 #define NOVALUE 999999
 
@@ -20,6 +21,8 @@ struct TMCstep
     bool get_dir();
 
     void update_status(uint32_t new_status);
+
+    void test();
 
     /* Motor level bitfields */
     // TODO these should probably be private
@@ -94,8 +97,12 @@ struct motorDrive
     // Zeroing & Other Functions
     void set_current_pos_mm(double target);
     void zero();
+    void set_max_move_dist_mm(float new_lim_mm);
     double get_current_pos_mm();
     double get_current_vel_mmps();
+
+    // Homing and sensing related
+    // bool home(bool to_min = true);
 
     // Async move related supporting real time target adjustment. Limit of ~20KHz step speed
     void set_pos_target_mm_async(double target, float feedrate = NOVALUE);
@@ -105,7 +112,7 @@ struct motorDrive
     void set_pos_target_mm_sync(double target, float feedrate = NOVALUE);
     
     // Pre-planned async move. Runs way faster than the realtime version
-    void plan_move(double target, float feedrate = NOVALUE);
+    void plan_move(double target, float feedrate = NOVALUE, bool ignore_limits = false);
     void execute_move_async();
     bool async_move_step_check(uint32_t t_now = micros());
 
@@ -116,12 +123,15 @@ struct motorDrive
     // Configuration
     float steps_per_mm = 160;
     float max_vel = 100;
+    float home_vel = 30;
     float max_accel = 500;
+    float max_dist_mm = 10000;
     float step_size_mm;
 
     // Backend funcs
     void quad_solve(double &t_0, double &t_1, double a, double b, double c);
     int32_t solve_for_t_us(float v, float a, float d);
+    double check_target(double target);
 
     // Control vars
     double target_mm = 0;
