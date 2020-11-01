@@ -6,10 +6,53 @@
 #define NOVALUE 999999
 
 
+/* Stepper driver object, to be used with up to 2 stepper objects */
+struct TMC2041
+{
+    TMC2041() {};
+    TMC2041(uint8_t en_pin, uint8_t cs_pin);
+
+    public:
+    void set_pins(uint8_t en_pin, uint8_t cs_pin);
+    void enable_driver();
+    void disable_driver();
+
+    /* Driver com functions */
+    void write_gconf();
+    uint8_t get_ihold_address(uint8_t index);
+    uint8_t get_chop_address(uint8_t index);
+    uint8_t get_cool_address(uint8_t index);
+    uint8_t get_status_address(uint8_t index);
+    void write_cmd(uint8_t addr, uint8_t chunk[4]);
+    int32_t read_cmd(uint8_t addr);
+
+    private:
+    uint8_t EN_PIN;
+    uint8_t CS_PIN;
+
+    /* SPI functions */
+    SPISettings TMCspiSettings = SPISettings(4000000, MSBFIRST, SPI_MODE3); 
+    
+    /* Addresses. Tuple if unique address for each stepper */
+    uint8_t a_gconf = 0x00;
+    uint8_t a_iholdirun[2] = {0x30, 0x50};
+    uint8_t a_chop[2] = {0x6C, 0x7C};
+    uint8_t a_cool[2] = {0x6D, 0x7D};
+    uint8_t a_status[2] = {0x6F, 0x7F};
+
+    /* Driver level bitfields */
+    uint8_t gconf[4] = {B00000000, B00000000, B00000000, B00000110};
+};
+
 /* Stepper object */
 struct TMCstep
 {
+    TMCstep() {};
+    TMCstep(uint8_t step_pin, uint8_t dir_pin, TMC2041 &my_driver, uint8_t motor_index);
+
     public:
+    TMC2041 driver;
+
     void set_pins(uint8_t step_pin, uint8_t dir_pin);
     void set_index(uint8_t index);
     uint8_t get_index();
@@ -20,15 +63,26 @@ struct TMCstep
     void set_dir(bool dir);
     bool get_dir();
 
+    void enable();
+    void disable();
+
     void update_status(uint32_t new_status);
 
-    void test();
+    /* Driver com functions */
+    void write_iholdirun();
+    void write_chop();
+    void write_cool();
+    void update_motor_status();
+
+    /* Sensorless homing stuff */
+    bool get_stallguard();
 
     /* Motor level bitfields */
     // TODO these should probably be private
     uint8_t ihold[4] = {B00000000, B00000001, B00010000, B00001000};
     uint8_t chop[4]  = {B00000010, B00000001, B00000000, B00000011};
-    uint8_t cool[4]  = {B00000000, B00000000, B00000000, B00000000};
+    uint8_t cool[4]  = {B00000000, B00000100, B00000000, B00000000};
+    uint8_t saved_chop = chop[3];
 
 
     private:
@@ -41,47 +95,6 @@ struct TMCstep
     bool motor_dir = false;
 
     uint32_t status_bits;
-};
-
-/* Stepper driver object, contains 2 stepper objects */
-struct TMC2041
-{
-    TMC2041(uint8_t en_pin, uint8_t cs_pin, uint8_t step0_pin, uint8_t step1_pin, uint8_t dir0_pin, uint8_t dir1_pin);
-
-    public:
-    void enable();
-    void disable();
-
-    TMCstep motor0;
-    TMCstep motor1;
-
-    /* Driver com functions */
-    void write_gconf();
-    void write_iholdirun(uint8_t motor_index);
-    void write_chop(uint8_t motor_index);
-    void write_cool(uint8_t motor_index);
-    void write_all();
-    void update_driver_status(uint8_t motor_index);
-
-
-    private:
-    uint8_t EN_PIN;
-    uint8_t CS_PIN;
-
-    /* SPI functions */
-    void write_cmd(uint8_t addr, uint8_t chunk[4]);
-    int32_t read_cmd(uint8_t addr);
-    SPISettings TMCspiSettings = SPISettings(4000000, MSBFIRST, SPI_MODE3); 
-    
-    /* Addresses. Tuple if unique address for each stepper */
-    uint8_t a_gconf = 0x00;
-    uint8_t a_iholdirun[2] = {0x30, 0x50};
-    uint8_t a_chop[2] = {0x6C, 0x7C};
-    uint8_t a_cool[2] = {0x6D, 0x7D};
-    uint8_t a_status[2] = {0x6F, 0x7F};
-
-    /* Driver level bitfields */
-    uint8_t gconf[4] = {B00000000, B00000000, B00000000, B00000110};
 };
 
 /* Stepper motor wrapper to handle motion profiles */
@@ -97,12 +110,14 @@ struct motorDrive
     // Zeroing & Other Functions
     void set_current_pos_mm(double target);
     void zero();
+    void enable();
+    void disable();
     void set_max_move_dist_mm(float new_lim_mm);
     double get_current_pos_mm();
     double get_current_vel_mmps();
 
     // Homing and sensing related
-    // bool home(bool to_min = true);
+    bool home(bool to_min = true);
 
     // Async move related supporting real time target adjustment. Limit of ~20KHz step speed
     void set_pos_target_mm_async(double target, float feedrate = NOVALUE);

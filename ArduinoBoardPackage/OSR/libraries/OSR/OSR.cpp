@@ -1,8 +1,21 @@
 #include <Arduino.h>
 #include "OSR.h"
 
+TMC2041::TMC2041(uint8_t en_pin, uint8_t cs_pin)
+{
+    set_pins(en_pin, cs_pin);
 
-TMC2041::TMC2041(uint8_t en_pin, uint8_t cs_pin, uint8_t step0_pin, uint8_t step1_pin, uint8_t dir0_pin, uint8_t dir1_pin)
+    // Start SPI if it aint running
+    SPI.begin();
+
+    delay(10);
+
+    // Configure driver with defaults and enable driver (not motors)
+    write_gconf();
+    enable_driver();
+}
+
+void TMC2041::set_pins(uint8_t en_pin, uint8_t cs_pin)
 {
     // Save and set up CS and enable pins
     CS_PIN = cs_pin;
@@ -11,28 +24,16 @@ TMC2041::TMC2041(uint8_t en_pin, uint8_t cs_pin, uint8_t step0_pin, uint8_t step
     EN_PIN = en_pin;
     pinMode(EN_PIN, OUTPUT);
     digitalWrite(EN_PIN, HIGH);
-
-    // Start SPI if it aint running - TODO maybe this is bad idk
-    SPI.begin();
-
-    // Configure driver with defaults
-    write_all();
-
-    // Configure contained steppers
-    motor0.set_pins(step0_pin, dir0_pin);
-    motor0.set_index(0);
-    motor1.set_pins(step1_pin, dir1_pin);
-    motor1.set_index(1);
 }
 
 // Public - enable stepper driver
-void TMC2041::enable()
+void TMC2041::enable_driver()
 {
   digitalWrite(EN_PIN, LOW);
 }
 
 // Public - disable stepper motor
-void TMC2041::disable()
+void TMC2041::disable_driver()
 {
   digitalWrite(EN_PIN, HIGH);
 }
@@ -48,6 +49,14 @@ void TMC2041::write_cmd(uint8_t addr, uint8_t chunk[4])
 
     SPI.endTransaction();
     digitalWrite(CS_PIN, HIGH);
+
+    Serial.print(addr, HEX);
+    for(uint8_t j = 0; j < 4; j++)
+    {
+        Serial.print("\t");
+        Serial.print(chunk[j], BIN);
+    }
+    Serial.println();
 }
 
 int32_t TMC2041::read_cmd(uint8_t addr)
@@ -82,48 +91,37 @@ void TMC2041::write_gconf()
     write_cmd(a_gconf, gconf);
 }
 
-void TMC2041::write_iholdirun(uint8_t motor_index)
+uint8_t TMC2041::get_ihold_address(uint8_t index)
 {
-    if (motor_index == 0)
-        write_cmd(a_iholdirun[0], motor0.ihold);
-    else if (motor_index == 1)
-        write_cmd(a_iholdirun[1], motor1.ihold);
+    return a_iholdirun[index];
 }
 
-void TMC2041::write_chop(uint8_t motor_index)
+uint8_t TMC2041::get_chop_address(uint8_t index)
 {
-    if (motor_index == 0)
-        write_cmd(a_chop[0], motor0.chop);
-    else if (motor_index == 1)
-        write_cmd(a_chop[1], motor1.chop);
+    return a_chop[index];
 }
 
-void TMC2041::write_cool(uint8_t motor_index)
+uint8_t TMC2041::get_cool_address(uint8_t index)
 {
-    if (motor_index == 0)
-        write_cmd(a_cool[0], motor0.cool);
-    else if (motor_index == 1)
-        write_cmd(a_cool[1], motor1.cool);
+    return a_cool[index];
 }
 
-void TMC2041::write_all()
+uint8_t TMC2041::get_status_address(uint8_t index)
 {
-    write_gconf();
-    for(uint8_t i = 0; i < 2; i++)
-    {
-        write_iholdirun(i);
-        write_chop(i);
-        write_cool(i);
-    }
+    return a_status[index];
 }
 
-void TMC2041::update_driver_status(uint8_t motor_index)
+
+TMCstep::TMCstep(uint8_t step_pin, uint8_t dir_pin, TMC2041 &my_driver, uint8_t motor_index)
 {
-    int32_t new_status = read_cmd(a_status[motor_index]);
-    if (motor_index == 0)
-        motor0.update_status(new_status);
-    else if (motor_index == 1)
-        motor1.update_status(new_status);
+    set_pins(step_pin, dir_pin);
+    set_index(motor_index);
+    driver = my_driver;
+
+    // Write initial configuration
+    write_iholdirun();
+    write_chop();
+    write_cool();
 }
 
 
@@ -183,9 +181,47 @@ bool TMCstep::get_dir()
     return motor_dir;
 }
 
+void TMCstep::enable()
+{
+    saved_chop = chop[3];
+    chop[3] = 0x00;
+    write_chop();
+}
+
+void TMCstep::disable()
+{
+    chop[3] = saved_chop;
+    write_chop();
+}
+
 void TMCstep::update_status(uint32_t new_status)
 {
     status_bits = new_status;
+}
+
+void TMCstep::write_iholdirun()
+{
+    driver.write_cmd(driver.get_ihold_address(INDEX), ihold);
+}
+
+void TMCstep::write_chop()
+{
+    driver.write_cmd(driver.get_chop_address(INDEX), chop);
+}
+
+void TMCstep::write_cool()
+{
+    driver.write_cmd(driver.get_cool_address(INDEX), cool);
+}
+
+void TMCstep::update_motor_status()
+{
+    status_bits = driver.read_cmd(driver.get_status_address(INDEX));
+}
+
+bool TMCstep::get_stallguard()
+{
+    return status_bits & 0x01000000;
 }
 
 
@@ -473,31 +509,37 @@ double motorDrive::get_current_vel_mmps()
 }
 
 // Public - Sensorless homing
-// bool motorDrive::home(bool to_min)
-// {
-//     if (to_min)
-//         stepper.set_dir(false);
-//     else
-//         stepper.set_dir(true);
+bool motorDrive::home(bool to_min)
+{
+    if (to_min)
+        stepper.set_dir(false);
+    else
+        stepper.set_dir(true);
 
-//     uint32_t steptime = 1000000 * step_size_mm / home_vel;
-//     uint32_t stepcount = 0;
-//     uint32_t nextstep = micros() + steptime;
+    uint32_t steptime = 1000000 * step_size_mm / home_vel;
+    uint32_t stepcount = 0;
+    uint32_t nextstep = micros() + steptime;
 
-//     while (true)
-//     {
-//         stepper.step();
-//         stepcount += 1;
+    while (true)
+    {
+        stepper.step();
+        stepcount += 1;
 
-//         while (micros() < nextstep);
+        while (micros() < nextstep);
 
-//         nextstep += steptime;
-//         if (stepcount % 16 == 0)
-//         {
-//             // stepper.update_driver_status(stepper.get_index());
-//         }
-//     }
-// }
+        nextstep += steptime;
+        if ((stepcount % 16 == 0) && (stepcount >= 128))
+        {
+            stepper.update_motor_status();
+            if(stepper.get_stallguard()) break;
+        }
+    }
+
+    if (to_min)
+        stepper.set_step(0);
+    else
+        stepper.set_step(steps_per_mm * max_dist_mm);
+}
 
 // Private - Quadratic equation yo
 void motorDrive::quad_solve(double &t_0, double &t_1, double a, double b, double c)
@@ -513,7 +555,7 @@ double motorDrive::check_target(double target)
 {
     target = target == NOVALUE ? target_mm : target;
     target = target < 0 ? 0 : target;
-    target = target > max_dist_mm ? 0 : max_dist_mm;
+    target = target > max_dist_mm ? max_dist_mm : target;
     return target;
 }
 
@@ -521,4 +563,14 @@ double motorDrive::check_target(double target)
 void motorDrive::zero()
 {
     set_current_pos_mm(0);
+}
+
+void motorDrive::enable()
+{
+    stepper.enable();
+}
+
+void motorDrive::disable()
+{
+    stepper.disable();
 }
