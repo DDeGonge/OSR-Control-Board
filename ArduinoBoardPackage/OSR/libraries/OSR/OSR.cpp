@@ -50,13 +50,13 @@ void TMC2041::write_cmd(uint8_t addr, uint8_t chunk[4])
     SPI.endTransaction();
     digitalWrite(CS_PIN, HIGH);
 
-    Serial.print(addr, HEX);
-    for(uint8_t j = 0; j < 4; j++)
-    {
-        Serial.print("\t");
-        Serial.print(chunk[j], BIN);
-    }
-    Serial.println();
+    // Serial.print(addr, HEX);
+    // for(uint8_t j = 0; j < 4; j++)
+    // {
+    //     Serial.print("\t");
+    //     Serial.print(chunk[j], BIN);
+    // }
+    // Serial.println();
 }
 
 int32_t TMC2041::read_cmd(uint8_t addr)
@@ -112,11 +112,12 @@ uint8_t TMC2041::get_status_address(uint8_t index)
 }
 
 
-TMCstep::TMCstep(uint8_t step_pin, uint8_t dir_pin, TMC2041 &my_driver, uint8_t motor_index)
+TMCstep::TMCstep(uint8_t step_pin, uint8_t dir_pin, TMC2041 &my_driver, uint8_t motor_index, bool reverse)
 {
     set_pins(step_pin, dir_pin);
     set_index(motor_index);
     driver = my_driver;
+    reversed = reverse;
 
     // Write initial configuration
     write_iholdirun();
@@ -169,10 +170,11 @@ void TMCstep::set_dir(bool dir)
     if (motor_dir != dir)
     {
         motor_dir = dir;
-        if (motor_dir)
-            digitalWrite(DIR_PIN, HIGH);
+        uint8_t setdir = motor_dir ? HIGH : LOW;
+        if (reversed)
+            digitalWrite(DIR_PIN, !setdir);
         else
-            digitalWrite(DIR_PIN, LOW);
+            digitalWrite(DIR_PIN, setdir);
     }
 }
 
@@ -183,20 +185,15 @@ bool TMCstep::get_dir()
 
 void TMCstep::enable()
 {
-    saved_chop = chop[3];
-    chop[3] = 0x00;
+    chop[3] = saved_chop;
     write_chop();
 }
 
 void TMCstep::disable()
 {
-    chop[3] = saved_chop;
+    saved_chop = chop[3];
+    chop[3] = 0x00;
     write_chop();
-}
-
-void TMCstep::update_status(uint32_t new_status)
-{
-    status_bits = new_status;
 }
 
 void TMCstep::write_iholdirun()
@@ -224,6 +221,38 @@ bool TMCstep::get_stallguard()
     return status_bits & 0x01000000;
 }
 
+void TMCstep::set_hold_current(uint8_t newval)
+{
+    newval = newval > 31 ? 31 : newval;
+    write_bits(ihold[3], newval, 3, 7);
+    write_iholdirun();
+}
+
+void TMCstep::set_run_current(uint8_t newval)
+{
+    newval = newval > 31 ? 31 : newval;
+    write_bits(ihold[2], newval, 3, 7);
+    write_iholdirun();
+}
+
+void TMCstep::set_microsteps(uint8_t newval)
+{
+    newval = newval > 8 ? 8 : newval;
+    write_bits(chop[0], newval, 4, 7);
+    write_chop();
+}
+
+void TMCstep::clear_bits(uint8_t &chunk, uint8_t i_min, uint8_t i_max)
+{
+    for(uint8_t i = (7 - i_max); i <= (7 - i_min); i++)
+        chunk &= ~(1u << i);
+}
+
+void TMCstep::write_bits(uint8_t &chunk, uint8_t new_chunk, uint8_t i_min, uint8_t i_max)
+{
+    clear_bits(chunk, i_min, i_max);
+    chunk |= (new_chunk << (7 - i_max));
+}
 
 
 // Constructor
@@ -314,6 +343,8 @@ void motorDrive::plan_move(double target, float feedrate, bool ignore_limits)
         plan_asteps = floor(plan_nsteps / 2);
     }
 
+    // Serial.print("clean_target");
+    // Serial.println(clean_target);
     // Serial.print("accel_dist");
     // Serial.println(accel_dist);
     // Serial.print("move_dist");
@@ -342,9 +373,12 @@ void motorDrive::plan_move(double target, float feedrate, bool ignore_limits)
 // Public - Start asynchronous move, requires motion plan and calling async_move_step_check frequently
 void motorDrive::execute_move_async()
 {
-    plan_stepstaken = 1;
-    plan_nextstep_us = micros() + plan_accel_timings[0];
-    stepper.step();
+    if (plan_nsteps > 0)
+    {
+        plan_stepstaken = 1;
+        plan_nextstep_us = micros() + plan_accel_timings[0];
+        stepper.step();
+    }
 }
 
 // Public - Take a step if ready. Call this in a loop until it returns true

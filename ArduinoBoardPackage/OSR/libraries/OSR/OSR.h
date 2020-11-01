@@ -48,7 +48,7 @@ struct TMC2041
 struct TMCstep
 {
     TMCstep() {};
-    TMCstep(uint8_t step_pin, uint8_t dir_pin, TMC2041 &my_driver, uint8_t motor_index);
+    TMCstep(uint8_t step_pin, uint8_t dir_pin, TMC2041 &my_driver, uint8_t motor_index, bool reverse = false);
 
     public:
     TMC2041 driver;
@@ -66,7 +66,10 @@ struct TMCstep
     void enable();
     void disable();
 
-    void update_status(uint32_t new_status);
+    /* Motor configurating funcs */
+    void set_hold_current(uint8_t newval); // Values 0-31 acceptable
+    void set_run_current(uint8_t newval);  // Values 0-31 acceptable
+    void set_microsteps(uint8_t newval);   // Values 0 (256u) to 8 (fullstep) acceptable
 
     /* Driver com functions */
     void write_iholdirun();
@@ -90,11 +93,15 @@ struct TMCstep
     uint8_t STEP_PIN;
     uint8_t DIR_PIN;
     uint16_t step_pulse_len_us = 1;
+    bool reversed = false;
 
     int32_t step_count = 0;
     bool motor_dir = false;
 
     uint32_t status_bits;
+
+    void clear_bits(uint8_t &chunk, uint8_t i_min, uint8_t i_max);
+    void write_bits(uint8_t &chunk, uint8_t new_chunk, uint8_t i_min, uint8_t i_max);
 };
 
 /* Stepper motor wrapper to handle motion profiles */
@@ -160,10 +167,10 @@ struct motorDrive
     // Sync motion tracking vars
     int8_t plan_sign;
     int32_t plan_tmin;
-    uint32_t plan_asteps;
-    uint32_t plan_nsteps;
+    uint32_t plan_asteps = 0;;
+    uint32_t plan_nsteps = 0;;
     std::vector<uint16_t> plan_accel_timings;
 
-    uint32_t plan_stepstaken;
-    uint32_t plan_nextstep_us;
+    uint32_t plan_stepstaken = 0;
+    uint32_t plan_nextstep_us = 0;
 };
