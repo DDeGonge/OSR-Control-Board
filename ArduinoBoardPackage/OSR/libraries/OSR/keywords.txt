@@ -8,6 +8,7 @@
 
 TMC2041	KEYWORD1
 TMCstep	KEYWORD1
+motorDrive	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)

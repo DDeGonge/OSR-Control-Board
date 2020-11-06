@@ -259,6 +259,12 @@ void TMCstep::write_bits(uint8_t &chunk, uint8_t new_chunk, uint8_t i_min, uint8
 motorDrive::motorDrive(TMCstep &new_stepper, int32_t steps_per_mm_new)
 {
     stepper = new_stepper;
+    set_steps_per_mm(steps_per_mm_new);
+}
+
+// Public - Update stepper default velocity in mm/s if input is not NOVALUE
+void motorDrive::set_steps_per_mm(int32_t steps_per_mm_new)
+{
     steps_per_mm = steps_per_mm_new;
     step_size_mm = 1 / steps_per_mm;
 }
@@ -382,7 +388,7 @@ void motorDrive::execute_move_async()
 }
 
 // Public - Take a step if ready. Call this in a loop until it returns true
-bool motorDrive::async_move_step_check(uint32_t t_now)
+bool motorDrive::async_move_step_check(uint32_t t_now, bool stall_check)
 {
     if (plan_stepstaken >= plan_nsteps)
         return true;
@@ -410,6 +416,13 @@ bool motorDrive::async_move_step_check(uint32_t t_now)
         } 
         stepper.step();
         plan_stepstaken++;
+
+        // If stall_check is requested and motor has moved for long enough, check for stall
+        if (stall_check && (plan_stepstaken % 16 == 0) && (plan_stepstaken > 64))
+        {
+            plan_stepstaken = plan_nsteps;
+            return true;
+        }
     }
     return false;
 }

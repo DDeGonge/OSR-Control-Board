@@ -113,6 +113,7 @@ struct motorDrive
     // Configuration functions
     void set_default_vel_mmps(float max_vel_new);
     void set_default_acc_mmps2(float max_accel_new);
+    void set_steps_per_mm(int32_t steps_per_mm_new);
 
     // Zeroing & Other Functions
     void set_current_pos_mm(double target);
@@ -133,10 +134,10 @@ struct motorDrive
     // Standard Synchronous move
     void set_pos_target_mm_sync(double target, float feedrate = NOVALUE);
     
-    // Pre-planned async move. Runs way faster than the realtime version
+    // Pre-planned async move. Runs WAY faster than the realtime version
     void plan_move(double target, float feedrate = NOVALUE, bool ignore_limits = false);
     void execute_move_async();
-    bool async_move_step_check(uint32_t t_now = micros());
+    bool async_move_step_check(uint32_t t_now = micros(), bool stall_check = false);
 
 
     private:
