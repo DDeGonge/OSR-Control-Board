@@ -84,7 +84,7 @@ struct TMCstep
     // TODO these should probably be private
     uint8_t ihold[4] = {B00000000, B00000001, B00010000, B00001000};
     uint8_t chop[4]  = {B00000010, B00000001, B00000000, B00000011};
-    uint8_t cool[4]  = {B00000000, B00000100, B00000000, B00000000};
+    uint8_t cool[4]  = {B00000000, B00000101, B00000000, B00000000};
     uint8_t saved_chop = chop[3];
 
 
@@ -125,17 +125,17 @@ struct motorDrive
     double get_current_vel_mmps();
 
     // Homing and sensing related
-    bool home(bool to_min = true);
+    void home(bool to_min = true);
 
     // Async move related supporting real time target adjustment. Limit of ~20KHz step speed
     void set_pos_target_mm_async(double target, float feedrate = NOVALUE);
     bool step_if_needed();
     
     // Standard Synchronous move
-    void set_pos_target_mm_sync(double target, float feedrate = NOVALUE);
+    void set_pos_target_mm_sync(double target, float feedrate = NOVALUE, bool ignore_limits = false);
     
     // Pre-planned async move. Runs WAY faster than the realtime version
-    void plan_move(double target, float feedrate = NOVALUE, bool ignore_limits = false);
+    void plan_move(double target, float feedrate = NOVALUE, float accel = NOVALUE, bool ignore_limits = false);
     void execute_move_async();
     bool async_move_step_check(uint32_t t_now = micros(), bool stall_check = false);
 
@@ -149,6 +149,7 @@ struct motorDrive
     float home_vel = 30;
     float max_accel = 500;
     float max_dist_mm = 10000;
+    float home_backoff_mm = 1;
     float step_size_mm;
 
     // Backend funcs

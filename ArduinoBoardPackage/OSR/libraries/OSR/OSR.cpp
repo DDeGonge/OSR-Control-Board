@@ -309,9 +309,9 @@ void motorDrive::set_pos_target_mm_async(double target, float feedrate)
 }
 
 // Public - Plan and execute acceleration profile Will stay in loop until move is complete
-void motorDrive::set_pos_target_mm_sync(double target, float feedrate)
+void motorDrive::set_pos_target_mm_sync(double target, float feedrate, bool ignore_limits)
 {
-    plan_move(target, feedrate);
+    plan_move(target, feedrate, ignore_limits=ignore_limits);
     execute_move_async();
     while (true)
     {
@@ -321,9 +321,10 @@ void motorDrive::set_pos_target_mm_sync(double target, float feedrate)
 }
 
 // Public - Creates and stores move plan to later be executed asynchronously
-void motorDrive::plan_move(double target, float feedrate, bool ignore_limits)
+void motorDrive::plan_move(double target, float feedrate, float accel, bool ignore_limits)
 {
     float maxvel = feedrate == NOVALUE ? max_vel : feedrate / 60;
+    float maxaccel = accel == NOVALUE ? max_accel : accel;
     double clean_target = ignore_limits ? target : check_target(target);
     int32_t step_target = clean_target * steps_per_mm;
     // Set stepper turn direction
@@ -334,7 +335,7 @@ void motorDrive::plan_move(double target, float feedrate, bool ignore_limits)
 
     // Calculate some motion paramters
     plan_nsteps = abs(step_target - stepper.get_step());
-    float accel_dist = (pow(maxvel, 2) / (2 * max_accel));
+    float accel_dist = (pow(maxvel, 2) / (2 * maxaccel));
     float move_dist = abs(clean_target - (stepper.get_step() / steps_per_mm));
 
     // Determine if move will be all accelerations or if it will have plateau
@@ -349,19 +350,6 @@ void motorDrive::plan_move(double target, float feedrate, bool ignore_limits)
         plan_asteps = floor(plan_nsteps / 2);
     }
 
-    // Serial.print("clean_target");
-    // Serial.println(clean_target);
-    // Serial.print("accel_dist");
-    // Serial.println(accel_dist);
-    // Serial.print("move_dist");
-    // Serial.println(move_dist);
-    // Serial.print("plan_tmin");
-    // Serial.println(plan_tmin);
-    // Serial.print("plan_asteps");
-    // Serial.println(plan_asteps);
-    // Serial.print("plan_nsteps");
-    // Serial.println(plan_nsteps);
-
     // Construct acceleration ramp timings
     plan_accel_timings.clear();
     int32_t next_target_delta_us = 0;
@@ -369,10 +357,10 @@ void motorDrive::plan_move(double target, float feedrate, bool ignore_limits)
     float v_now = 0;
     for(int i = 0; i < plan_asteps; i++)
     {
-        next_target_delta_us = solve_for_t_us(v_now, max_accel, step_size_mm);
+        next_target_delta_us = solve_for_t_us(v_now, maxaccel, step_size_mm);
         plan_accel_timings.push_back(next_target_delta_us);
         totaltime_us += next_target_delta_us;
-        v_now = (totaltime_us * max_accel) / 1000000;
+        v_now = (totaltime_us * maxaccel) / 1000000;
     }
 }
 
@@ -391,7 +379,11 @@ void motorDrive::execute_move_async()
 bool motorDrive::async_move_step_check(uint32_t t_now, bool stall_check)
 {
     if (plan_stepstaken >= plan_nsteps)
+    {
+        plan_nsteps = 0;
+        plan_stepstaken = 0;
         return true;
+    }
     else if (t_now > plan_nextstep_us)
     {
         // Accelerating
@@ -418,10 +410,15 @@ bool motorDrive::async_move_step_check(uint32_t t_now, bool stall_check)
         plan_stepstaken++;
 
         // If stall_check is requested and motor has moved for long enough, check for stall
-        if (stall_check && (plan_stepstaken % 16 == 0) && (plan_stepstaken > 64))
+        if (stall_check && (plan_stepstaken % 16 == 0) && (plan_stepstaken > 640))
         {
-            plan_stepstaken = plan_nsteps;
-            return true;
+            stepper.update_motor_status();
+            if(stepper.get_stallguard())
+            {
+                plan_nsteps = 0;
+                plan_stepstaken = 0;
+                return true;
+            }
         }
     }
     return false;
@@ -455,13 +452,6 @@ bool motorDrive::step_if_needed()
 {
     uint32_t t_now = micros();
     int32_t step_target = (steps_per_mm * target_mm);
-
-    // Serial.print(stepper.get_step());
-    // Serial.print("\t");
-    // Serial.print(t_now);
-    // Serial.print("\t");
-    // Serial.print(next_step_us);
-    // Serial.print("\n");
 
     // Check if motor is in right place already
     if((abs(current_velocity) < 0.001) && (step_target == stepper.get_step()))
@@ -556,36 +546,32 @@ double motorDrive::get_current_vel_mmps()
 }
 
 // Public - Sensorless homing
-bool motorDrive::home(bool to_min)
+void motorDrive::home(bool to_min)
 {
     if (to_min)
-        stepper.set_dir(false);
+        plan_move(-300, home_vel * 60, 3000, true);
     else
-        stepper.set_dir(true);
+        plan_move(300, home_vel * 60, 3000, true);
 
-    uint32_t steptime = 1000000 * step_size_mm / home_vel;
-    uint32_t stepcount = 0;
-    uint32_t nextstep = micros() + steptime;
-
+    execute_move_async();
     while (true)
     {
-        stepper.step();
-        stepcount += 1;
-
-        while (micros() < nextstep);
-
-        nextstep += steptime;
-        if ((stepcount % 16 == 0) && (stepcount >= 128))
-        {
-            stepper.update_motor_status();
-            if(stepper.get_stallguard()) break;
-        }
+        if(async_move_step_check(micros(), true))
+            break;
     }
 
     if (to_min)
+    {
         stepper.set_step(0);
+        set_pos_target_mm_sync(home_backoff_mm);
+        stepper.set_step(0);
+    }
     else
+    {
         stepper.set_step(steps_per_mm * max_dist_mm);
+        set_pos_target_mm_sync(steps_per_mm * (max_dist_mm - home_backoff_mm));
+        stepper.set_step(steps_per_mm * max_dist_mm);
+    }
 }
 
 // Private - Quadratic equation yo
