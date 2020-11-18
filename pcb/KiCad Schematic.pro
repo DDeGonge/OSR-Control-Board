@@ -1,4 +1,4 @@
-update=10/2/2020 8:27:31 PM
+update=11/17/2020 11:42:45 PM
 version=1
 last_client=kicad
 [general]
@@ -16,7 +16,7 @@ LibDir=
 version=1
 PageLayoutDescrFile=
 LastNetListRead=
-CopperLayerCount=4
+CopperLayerCount=2
 BoardThickness=1.6
 AllowMicroVias=0
 AllowBlindVias=0
@@ -65,11 +65,11 @@ Enabled=1
 [pcbnew/Layer.In1.Cu]
 Name=In1.Cu
 Type=0
-Enabled=1
+Enabled=0
 [pcbnew/Layer.In2.Cu]
 Name=In2.Cu
 Type=0
-Enabled=1
+Enabled=0
 [pcbnew/Layer.In3.Cu]
 Name=In3.Cu
 Type=0
@@ -184,14 +184,14 @@ Type=0
 Enabled=0
 [pcbnew/Layer.B.Cu]
 Name=B.Cu
-Type=0
+Type=1
 Enabled=1
 [pcbnew/Layer.B.Adhes]
-Enabled=0
+Enabled=1
 [pcbnew/Layer.F.Adhes]
 Enabled=1
 [pcbnew/Layer.B.Paste]
-Enabled=0
+Enabled=1
 [pcbnew/Layer.F.Paste]
 Enabled=1
 [pcbnew/Layer.B.SilkS]
@@ -199,7 +199,7 @@ Enabled=1
 [pcbnew/Layer.F.SilkS]
 Enabled=1
 [pcbnew/Layer.B.Mask]
-Enabled=0
+Enabled=1
 [pcbnew/Layer.F.Mask]
 Enabled=1
 [pcbnew/Layer.Dwgs.User]
@@ -219,7 +219,7 @@ Enabled=1
 [pcbnew/Layer.F.CrtYd]
 Enabled=1
 [pcbnew/Layer.B.Fab]
-Enabled=0
+Enabled=1
 [pcbnew/Layer.F.Fab]
 Enabled=1
 [pcbnew/Layer.Rescue]
