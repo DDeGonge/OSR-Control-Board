@@ -79,12 +79,13 @@ struct TMCstep
 
     /* Sensorless homing stuff */
     bool get_stallguard();
+    uint32_t get_stall_value();
 
     /* Motor level bitfields */
     // TODO these should probably be private
     uint8_t ihold[4] = {B00000000, B00000001, B00010000, B00001000};
     uint8_t chop[4]  = {B00000010, B00000001, B00000000, B00000011};
-    uint8_t cool[4]  = {B00000000, B00000101, B00000000, B00000000};
+    uint8_t cool[4]  = {B00000000, B00000110, B00000000, B00000000};
     uint8_t saved_chop = chop[3];
 
 
@@ -126,6 +127,7 @@ struct motorDrive
 
     // Homing and sensing related
     void home(bool to_min = true);
+    uint32_t get_stall_value();
 
     // Async move related supporting real time target adjustment. Limit of ~20KHz step speed
     void set_pos_target_mm_async(double target, float feedrate = NOVALUE);

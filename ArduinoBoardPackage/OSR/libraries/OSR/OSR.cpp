@@ -221,6 +221,11 @@ bool TMCstep::get_stallguard()
     return status_bits & 0x01000000;
 }
 
+uint32_t TMCstep::get_stall_value()
+{
+    return status_bits & 0x000003FF;
+}
+
 void TMCstep::set_hold_current(uint8_t newval)
 {
     newval = newval > 31 ? 31 : newval;
@@ -549,9 +554,9 @@ double motorDrive::get_current_vel_mmps()
 void motorDrive::home(bool to_min)
 {
     if (to_min)
-        plan_move(-300, home_vel * 60, 3000, true);
+        plan_move(-300, home_vel * 60, 5000, true);
     else
-        plan_move(300, home_vel * 60, 3000, true);
+        plan_move(300, home_vel * 60, 5000, true);
 
     execute_move_async();
     while (true)
@@ -572,6 +577,13 @@ void motorDrive::home(bool to_min)
         set_pos_target_mm_sync(steps_per_mm * (max_dist_mm - home_backoff_mm));
         stepper.set_step(steps_per_mm * max_dist_mm);
     }
+}
+
+// Public - Prints current stallguard value
+uint32_t motorDrive::get_stall_value()
+{
+    stepper.update_motor_status();
+    return stepper.get_stall_value();
 }
 
 // Private - Quadratic equation yo
