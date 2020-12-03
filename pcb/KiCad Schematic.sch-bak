@@ -183,23 +183,6 @@ F 3 "" H 20450 7400 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L SamacSys_Parts:47309-3351 J1
-U 1 1 5F283BC6
-P 19450 3300
-F 0 "J1" H 20100 3565 50  0000 C CNN
-F 1 "47309-3351" H 20100 3474 50  0000 C CNN
-F 2 "473093351" H 20600 3400 50  0001 L CNN
-F 3 "https://componentsearchengine.com/Datasheets/2/47309-3351.pdf" H 20600 3300 50  0001 L CNN
-F 4 "Molex 47309 Series 8 Way Right Angle Micro SD Memory Card Connector with Solder Termination" H 20600 3200 50  0001 L CNN "Description"
-F 5 "3.35" H 20600 3100 50  0001 L CNN "Height"
-F 6 "538-47309-3351" H 20600 3000 50  0001 L CNN "Mouser Part Number"
-F 7 "https://www.mouser.co.uk/ProductDetail/Molex/47309-3351?qs=7KFxWLW3pjpf5Z6T4AnH5Q%3D%3D" H 20600 2900 50  0001 L CNN "Mouser Price/Stock"
-F 8 "Molex" H 20600 2800 50  0001 L CNN "Manufacturer_Name"
-F 9 "47309-3351" H 20600 2700 50  0001 L CNN "Manufacturer_Part_Number"
-	1    19450 3300
-	1    0    0    -1  
-$EndComp
-$Comp
 L power:+5V #PWR0107
 U 1 1 5F2A478B
 P 22700 7100
@@ -210,72 +193,53 @@ F 3 "" H 22700 7100 50  0001 C CNN
 	1    22700 7100
 	1    0    0    -1  
 $EndComp
-Text Label 19350 3500 2    50   ~ 0
+Text Label 20900 3300 0    50   ~ 0
 MOSI
-Text Label 20850 3300 0    50   ~ 0
+Text Label 20900 3700 0    50   ~ 0
 MISO
 $Comp
 L power:GND #PWR0125
 U 1 1 5F4226D8
-P 19400 3850
-F 0 "#PWR0125" H 19400 3600 50  0001 C CNN
-F 1 "GND" H 19405 3677 50  0000 C CNN
-F 2 "" H 19400 3850 50  0001 C CNN
-F 3 "" H 19400 3850 50  0001 C CNN
-	1    19400 3850
+P 21200 3700
+F 0 "#PWR0125" H 21200 3450 50  0001 C CNN
+F 1 "GND" H 21205 3527 50  0000 C CNN
+F 2 "" H 21200 3700 50  0001 C CNN
+F 3 "" H 21200 3700 50  0001 C CNN
+	1    21200 3700
 	1    0    0    -1  
 $EndComp
 $Comp
 L power:+3.3V #PWR0126
 U 1 1 5F42DB4A
-P 19050 3450
-F 0 "#PWR0126" H 19050 3300 50  0001 C CNN
-F 1 "+3.3V" H 19065 3623 50  0000 C CNN
-F 2 "" H 19050 3450 50  0001 C CNN
-F 3 "" H 19050 3450 50  0001 C CNN
-	1    19050 3450
+P 21150 3250
+F 0 "#PWR0126" H 21150 3100 50  0001 C CNN
+F 1 "+3.3V" H 21165 3423 50  0000 C CNN
+F 2 "" H 21150 3250 50  0001 C CNN
+F 3 "" H 21150 3250 50  0001 C CNN
+	1    21150 3250
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	19450 3800 19400 3800
-Wire Wire Line
-	19400 3800 19400 3850
-Text Label 19050 3700 2    50   ~ 0
+Text Label 20900 3500 0    50   ~ 0
 SCK
 Wire Wire Line
-	19450 3700 19050 3700
+	20900 3300 20800 3300
 Wire Wire Line
-	19350 3500 19450 3500
-Wire Wire Line
-	20750 3300 20850 3300
-Text Label 19350 3200 2    50   ~ 0
+	20800 3700 20900 3700
+Text Label 19400 3900 2    50   ~ 0
 SD_CS
 Wire Wire Line
-	19050 3450 19050 3600
-Wire Wire Line
-	19050 3600 19450 3600
-Wire Wire Line
-	19350 3200 19350 3400
-Wire Wire Line
-	19350 3400 19450 3400
+	21150 3250 21150 3400
 $Comp
 L power:GND #PWR0102
 U 1 1 5F5BC76F
-P 21000 3650
-F 0 "#PWR0102" H 21000 3400 50  0001 C CNN
-F 1 "GND" H 21005 3477 50  0000 C CNN
-F 2 "" H 21000 3650 50  0001 C CNN
-F 3 "" H 21000 3650 50  0001 C CNN
-	1    21000 3650
+P 19150 3500
+F 0 "#PWR0102" H 19150 3250 50  0001 C CNN
+F 1 "GND" H 19155 3327 50  0000 C CNN
+F 2 "" H 19150 3500 50  0001 C CNN
+F 3 "" H 19150 3500 50  0001 C CNN
+	1    19150 3500
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	21000 3650 21000 3600
-Wire Wire Line
-	21000 3600 20750 3600
-Wire Wire Line
-	20750 3600 20750 3500
-Connection ~ 20750 3600
 $Comp
 L power:GND #PWR0103
 U 1 1 5F5F3F7E
@@ -2284,9 +2248,9 @@ Text Label 16000 2300 2    50   ~ 0
 GATE0
 Text Label 16000 4050 2    50   ~ 0
 GATE1
-Text Label 1300 3050 2    50   ~ 0
+Text Label 1750 4600 3    50   ~ 0
 GATE0
-Text Label 1300 3150 2    50   ~ 0
+Text Label 1850 4600 3    50   ~ 0
 GATE1
 Wire Wire Line
 	16000 4050 16100 4050
@@ -2537,7 +2501,7 @@ F 3 "" H 21300 11100 50  0001 C CNN
 	1    21300 11100
 	1    0    0    -1  
 $EndComp
-Text Label 21400 11000 0    50   ~ 0
+Text Label 21400 12300 0    50   ~ 0
 SERVO0
 Wire Wire Line
 	21400 11000 21650 11000
@@ -2597,7 +2561,7 @@ F 3 "" H 21300 12400 50  0001 C CNN
 	1    21300 12400
 	1    0    0    -1  
 $EndComp
-Text Label 21400 12300 0    50   ~ 0
+Text Label 21400 11000 0    50   ~ 0
 SERVO2
 Wire Wire Line
 	21400 12300 21650 12300
@@ -2605,11 +2569,11 @@ Wire Wire Line
 	21300 12400 21650 12400
 Wire Wire Line
 	21300 12500 21650 12500
-Text Label 3800 3450 0    50   ~ 0
+Text Label 3150 4600 3    50   ~ 0
 SERVO0
 Text Label 3250 4600 3    50   ~ 0
 SERVO1
-Text Label 3150 4600 3    50   ~ 0
+Text Label 3800 3450 0    50   ~ 0
 SERVO2
 Wire Wire Line
 	3150 4450 3150 4600
@@ -2658,15 +2622,15 @@ F 3 "~" H 20300 12450 50  0001 C CNN
 	1    20300 12450
 	1    0    0    -1  
 $EndComp
-Text Label 1300 3450 2    50   ~ 0
+Text Label 1300 3250 2    50   ~ 0
 GEN2
-Text Label 1300 3550 2    50   ~ 0
+Text Label 1300 3350 2    50   ~ 0
 GEN3
-Text Label 1300 3650 2    50   ~ 0
+Text Label 1300 3450 2    50   ~ 0
 GEN4
-Text Label 1750 4600 3    50   ~ 0
+Text Label 1300 3550 2    50   ~ 0
 GEN5
-Text Label 1850 4600 3    50   ~ 0
+Text Label 1300 3650 2    50   ~ 0
 GEN6
 Text Label 1950 4600 3    50   ~ 0
 GEN7
@@ -2694,13 +2658,13 @@ Wire Wire Line
 	1850 4600 1850 4450
 Wire Wire Line
 	1950 4450 1950 4600
-Text Label 19950 13450 2    50   ~ 0
+Text Label 19950 13250 2    50   ~ 0
 SERVO0
 Wire Wire Line
 	19950 11550 20100 11550
 Text Label 19950 13350 2    50   ~ 0
 SERVO1
-Text Label 19950 13250 2    50   ~ 0
+Text Label 19950 13450 2    50   ~ 0
 SERVO2
 Wire Wire Line
 	20100 11750 19950 11750
@@ -2708,15 +2672,15 @@ Wire Wire Line
 	19950 11650 20100 11650
 Wire Wire Line
 	1300 2950 1450 2950
-Text Label 19950 11950 2    50   ~ 0
+Text Label 19950 11750 2    50   ~ 0
 GEN2
-Text Label 19950 12050 2    50   ~ 0
+Text Label 19950 11850 2    50   ~ 0
 GEN3
-Text Label 19950 12150 2    50   ~ 0
+Text Label 19950 11950 2    50   ~ 0
 GEN4
-Text Label 19950 12250 2    50   ~ 0
+Text Label 19950 12050 2    50   ~ 0
 GEN5
-Text Label 19950 12350 2    50   ~ 0
+Text Label 19950 12150 2    50   ~ 0
 GEN6
 Wire Wire Line
 	19950 11850 20100 11850
@@ -2756,11 +2720,11 @@ Text Label 2450 4600 3    50   ~ 0
 GEN10
 Wire Wire Line
 	2050 4450 2050 4600
-Text Label 19950 12450 2    50   ~ 0
+Text Label 19950 12250 2    50   ~ 0
 GEN7
-Text Label 19950 12550 2    50   ~ 0
+Text Label 19950 12350 2    50   ~ 0
 GEN8
-Text Label 19950 12650 2    50   ~ 0
+Text Label 19950 12450 2    50   ~ 0
 GEN9
 Wire Wire Line
 	20100 12550 19950 12550
@@ -2768,11 +2732,11 @@ Wire Wire Line
 	19950 12650 20100 12650
 Wire Wire Line
 	20100 12750 19950 12750
-Text Label 19950 12850 2    50   ~ 0
+Text Label 19950 12650 2    50   ~ 0
 GEN11
-Text Label 19950 12950 2    50   ~ 0
+Text Label 19950 12750 2    50   ~ 0
 GEN12
-Text Label 19950 13050 2    50   ~ 0
+Text Label 19950 12850 2    50   ~ 0
 GEN13
 Wire Wire Line
 	20100 12950 19950 12950
@@ -2780,7 +2744,7 @@ Wire Wire Line
 	19950 13050 20100 13050
 Wire Wire Line
 	20100 13150 19950 13150
-Text Label 19950 13150 2    50   ~ 0
+Text Label 19950 12950 2    50   ~ 0
 GEN14
 Wire Wire Line
 	20100 13250 19950 13250
@@ -2788,7 +2752,7 @@ Wire Wire Line
 	19950 13350 20100 13350
 Wire Wire Line
 	20100 13450 19950 13450
-Text Label 19950 12750 2    50   ~ 0
+Text Label 19950 12550 2    50   ~ 0
 GEN10
 Wire Wire Line
 	20100 12850 19950 12850
@@ -2871,17 +2835,17 @@ Wire Wire Line
 	7750 2900 7750 2800
 Wire Wire Line
 	1300 2650 1450 2650
-Text Label 19950 11550 2    50   ~ 0
+Text Label 19950 13050 2    50   ~ 0
 GATE0
-Text Label 19950 11650 2    50   ~ 0
+Text Label 19950 13150 2    50   ~ 0
 GATE1
-Text Label 1300 3250 2    50   ~ 0
+Text Label 1300 3050 2    50   ~ 0
 GEN0
-Text Label 1300 3350 2    50   ~ 0
+Text Label 1300 3150 2    50   ~ 0
 GEN1
-Text Label 19950 11750 2    50   ~ 0
+Text Label 19950 11550 2    50   ~ 0
 GEN0
-Text Label 19950 11850 2    50   ~ 0
+Text Label 19950 11650 2    50   ~ 0
 GEN1
 Wire Notes Line
 	18650 9550 22900 9550
@@ -3407,4 +3371,51 @@ Wire Wire Line
 	19250 6700 21450 6700
 Wire Wire Line
 	21450 6700 21450 7200
+Text Label 3150 1200 1    50   ~ 0
+SD_CS
+Wire Wire Line
+	3150 1200 3150 1350
+$Comp
+L SamacSys_Parts:47571-0001 J1
+U 1 1 5FCB4E4A
+P 19500 3300
+F 0 "J1" H 20150 3565 50  0000 C CNN
+F 1 "47571-0001" H 20150 3474 50  0000 C CNN
+F 2 "475710001" H 20650 3400 50  0001 L CNN
+F 3 "https://componentsearchengine.com/Datasheets/2/47571-0001.pdf" H 20650 3300 50  0001 L CNN
+F 4 "Memory Card Connectors ASSY FOR TFR HEADER HEADER W/DETECT PIN" H 20650 3200 50  0001 L CNN "Description"
+F 5 "2.3" H 20650 3100 50  0001 L CNN "Height"
+F 6 "538-47571-0001" H 20650 3000 50  0001 L CNN "Mouser Part Number"
+F 7 "https://www.mouser.co.uk/ProductDetail/Molex/47571-0001?qs=qM7ngqbhX5UTJOg9nqKLJQ%3D%3D" H 20650 2900 50  0001 L CNN "Mouser Price/Stock"
+F 8 "Molex" H 20650 2800 50  0001 L CNN "Manufacturer_Name"
+F 9 "47571-0001" H 20650 2700 50  0001 L CNN "Manufacturer_Part_Number"
+	1    19500 3300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	20800 3400 21150 3400
+Wire Wire Line
+	19400 3900 19500 3900
+Wire Wire Line
+	20800 3500 20900 3500
+Wire Wire Line
+	20800 3600 21200 3600
+Wire Wire Line
+	21200 3600 21200 3700
+Wire Wire Line
+	19150 3500 19150 3300
+Wire Wire Line
+	19150 3300 19350 3300
+Wire Wire Line
+	19500 3400 19350 3400
+Wire Wire Line
+	19350 3400 19350 3300
+Connection ~ 19350 3300
+Wire Wire Line
+	19350 3300 19500 3300
+Wire Wire Line
+	19500 3500 19350 3500
+Wire Wire Line
+	19350 3500 19350 3400
+Connection ~ 19350 3400
 $EndSCHEMATC

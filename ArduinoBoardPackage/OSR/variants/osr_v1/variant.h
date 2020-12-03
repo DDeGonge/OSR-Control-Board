@@ -57,8 +57,8 @@ extern "C"
  *----------------------------------------------------------------------------*/
 
 // Number of pins defined in PinDescription array
-#define PINS_COUNT           (49u)
-#define NUM_DIGITAL_PINS     (29u)
+#define PINS_COUNT           (54u)
+#define NUM_DIGITAL_PINS     (34u)
 #define NUM_ANALOG_INPUTS    (1u)
 #define NUM_ANALOG_OUTPUTS   (1u)
 #define analogInputToDigitalPin(p)  ((p < 6u) ? (p) + 14u : -1)
@@ -132,10 +132,10 @@ static const uint8_t D1S1S = D1_S1_STEP ;
 static const uint8_t D1S1D = D1_S1_DIR ;
 
 // Peripheral pins
-#define Servo_0              (15u)
+#define Servo_0              (41u)
 #define Servo_1              (Servo_0 + 1)
 #define Servo_2              (Servo_0 + 2)
-#define Gate_0               (18u)
+#define Gate_0               (17u)
 #define Gate_1               (Gate_0 + 1)
 
 static const uint8_t S0 = Servo_0 ;
