@@ -11,12 +11,12 @@
         {
           "name": "OSR Board",
           "architecture": "samd",
-          "version": "2.0.0",
+          "version": "2.0.1",
           "category": "Contributed",
-          "url": "https://github.com/DDeGonge/OSR-Control-Board/raw/master/ArduinoBoardPackage/OSR-2.0.0.zip",
-          "archiveFileName": "OSR-2.0.0.zip",
-          "checksum": "MD5:8b4115f245cba50065d40b12281a0f16",
-          "size": "1703646",
+          "url": "https://github.com/DDeGonge/OSR-Control-Board/raw/master/ArduinoBoardPackage/OSR-2.0.1.zip",
+          "archiveFileName": "OSR-2.0.1.zip",
+          "checksum": "MD5:d9e8fe419bd39bdb75ede26a10a77a68",
+          "size": "1703654",
           "boards": [
             {
               "name": "osr_v1"
