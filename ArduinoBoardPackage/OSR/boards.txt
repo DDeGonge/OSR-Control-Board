@@ -146,3 +146,66 @@ osr_v2.menu.usbstack.tinyusb.build.flags.usbstack=-DUSE_TINYUSB
 osr_v2.menu.debug.off=Off
 osr_v2.menu.debug.on=On
 osr_v2.menu.debug.on.build.flags.debug=-g
+
+# PRIME V1 (SAMD51)
+# ------------------------------
+prime_v1.name=OSR Prime V1 (SAMD51)
+prime_v1.vid.0=0x239A
+prime_v1.pid.0=0x8022
+prime_v1.vid.1=0x239A
+prime_v1.pid.1=0x0022
+prime_v1.upload.tool=bossac18
+prime_v1.upload.protocol=sam-ba
+prime_v1.upload.maximum_size=507904
+prime_v1.upload.offset=0x4000
+prime_v1.upload.use_1200bps_touch=true
+prime_v1.upload.wait_for_upload_port=true
+prime_v1.upload.native_usb=true
+prime_v1.build.mcu=cortex-m4
+#prime_v1.build.f_cpu=120000000L
+prime_v1.build.usb_product="OSR Prime V1"
+prime_v1.build.usb_manufacturer="3DprintedLife"
+prime_v1.build.board=PRIME_V1
+prime_v1.build.core=arduino
+prime_v1.build.extra_flags=-D__SAMD51J19A__ -DADAFRUIT_FEATHER_M4_EXPRESS -D__SAMD51__ {build.usb_flags} -D__FPU_PRESENT -DARM_MATH_CM4 -mfloat-abi=hard -mfpu=fpv4-sp-d16
+prime_v1.build.ldscript=linker_scripts/gcc/flash_with_bootloader.ld
+prime_v1.build.openocdscript=openocd_scripts/arduino_zero.cfg
+prime_v1.build.variant=prime_v1
+prime_v1.build.variant_system_lib=
+prime_v1.build.vid=0x239A
+prime_v1.build.pid=0x8022
+prime_v1.bootloader.tool=openocd
+prime_v1.bootloader.file=prime_v1/bootloader-feather_m4-v2.0.0-adafruit.5.bin
+prime_v1.compiler.arm.cmsis.ldflags="-L{runtime.tools.CMSIS-5.4.0.path}/CMSIS/Lib/GCC/" "-L{build.variant.path}" -larm_cortexM4lf_math -mfloat-abi=hard -mfpu=fpv4-sp-d16 
+prime_v1.menu.cache.on=Enabled
+prime_v1.menu.cache.on.build.cache_flags=-DENABLE_CACHE
+prime_v1.menu.cache.off=Disabled
+prime_v1.menu.cache.off.build.cache_flags=
+prime_v1.menu.speed.120=120 MHz (standard)
+prime_v1.menu.speed.120.build.f_cpu=120000000L
+prime_v1.menu.speed.150=150 MHz (overclock)
+prime_v1.menu.speed.150.build.f_cpu=150000000L
+prime_v1.menu.speed.180=180 MHz (overclock)
+prime_v1.menu.speed.180.build.f_cpu=180000000L
+prime_v1.menu.speed.200=200 MHz (overclock)
+prime_v1.menu.speed.200.build.f_cpu=200000000L
+prime_v1.menu.opt.small=Small (-Os) (standard)
+prime_v1.menu.opt.small.build.flags.optimize=-Os
+prime_v1.menu.opt.fast=Fast (-O2)
+prime_v1.menu.opt.fast.build.flags.optimize=-O2
+prime_v1.menu.opt.faster=Faster (-O3)
+prime_v1.menu.opt.faster.build.flags.optimize=-O3
+prime_v1.menu.opt.fastest=Fastest (-Ofast)
+prime_v1.menu.opt.fastest.build.flags.optimize=-Ofast
+prime_v1.menu.opt.dragons=Here be dragons (-Ofast -funroll-loops)
+prime_v1.menu.opt.dragons.build.flags.optimize=-Ofast -funroll-loops
+prime_v1.menu.maxqspi.50=50 MHz (standard)
+prime_v1.menu.maxqspi.50.build.flags.maxqspi=-DVARIANT_QSPI_BAUD_DEFAULT=50000000
+prime_v1.menu.maxqspi.fcpu=CPU Speed / 2
+prime_v1.menu.maxqspi.fcpu.build.flags.maxqspi=-DVARIANT_QSPI_BAUD_DEFAULT=({build.f_cpu})
+prime_v1.menu.usbstack.arduino=Arduino
+prime_v1.menu.usbstack.tinyusb=TinyUSB
+prime_v1.menu.usbstack.tinyusb.build.flags.usbstack=-DUSE_TINYUSB
+prime_v1.menu.debug.off=Off
+prime_v1.menu.debug.on=On
+prime_v1.menu.debug.on.build.flags.debug=-g

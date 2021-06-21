@@ -1,0 +1,70 @@
+06-02 21:42:58 replicate_layout.action_replicate_layout 305:Plugin executed on: 'win32'
+06-02 21:42:58 replicate_layout.action_replicate_layout 306:Plugin executed with python version: '2.7.16 (default, Aug 15 2019, 17:51:40)  [GCC 9.2.0 64 bit (AMD64)]'
+06-02 21:42:58 replicate_layout.action_replicate_layout 307:KiCad build version: (5.1.6)-1
+06-02 21:42:58 replicate_layout.action_replicate_layout 308:Replicate layout plugin version: 70 started
+06-02 21:42:58 replicate_layout.action_replicate_layout 340:Preparing replicator with U1 as a reference
+06-02 21:42:58 replicate_layout.replicatelayout 215:getting project hierarchy from schematics
+06-02 21:42:58 replicate_layout.replicatelayout 217:Project hierarchy looks like:
+{u'60B644A9': [u'2014Driver', u'C:\\Users\\DDeGo\\Documents\\Drew\\Projects\\OSR-Prime-Control-Board\\pcb\\2041Driver.sch'], u'61C22798': [u'sheet61C22781', u'C:\\Users\\DDeGo\\Documents\\Drew\\Projects\\OSR-Prime-Control-Board\\pcb\\5160Driver.sch'], u'6081D33F': [u'5160Driver0', u'C:\\Users\\DDeGo\\Documents\\Drew\\Projects\\OSR-Prime-Control-Board\\pcb\\5160Driver.sch'], u'61BB23DB': [u'sheet61BB23C4', u'C:\\Users\\DDeGo\\Documents\\Drew\\Projects\\OSR-Prime-Control-Board\\pcb\\5160Driver.sch'], u'60C9AE58': [u'sheet60C9AE4D', u'C:\\Users\\DDeGo\\Documents\\Drew\\Projects\\OSR-Prime-Control-Board\\pcb\\2041Driver.sch']}
+06-02 21:42:58 replicate_layout.replicatelayout 225:getting a list of all footprints on board
+06-02 21:42:58 replicate_layout.action_replicate_layout 367:source anchor footprint is u'U1'
+Located on:[u'2014Driver']
+With filenames:[u'2041Driver.sch']
+With sheet_id:[u'2014Driver']
+06-02 21:42:58 replicate_layout.action_replicate_layout 371:Corresponding footprints are 
+[(u'U2', [u'sheet60C9AE4D']), (u'U1', [u'2014Driver'])]
+06-02 21:42:58 replicate_layout.action_replicate_layout 384:Showing dialog
+06-02 21:42:58 replicate_layout.action_replicate_layout 388:Pcbnew position: wx.Point(156, 0)
+06-02 21:42:58 replicate_layout.action_replicate_layout 394:Display 0: wx.Rect(0, 0, 3440, 1440)
+06-02 21:42:58 replicate_layout.action_replicate_layout 398:Toolbar position: wx.Point(1684, 123)
+06-02 21:42:58 replicate_layout.action_replicate_layout 405:Dialog position: wx.Point(1371, 123)
+06-02 21:43:01 replicate_layout.replicatelayout 249:construcing a list of sheets suitable for replication on level:u'2014Driver', file:u'2041Driver.sch'
+06-02 21:43:01 replicate_layout.replicatelayout 256:Source sheet path up to the level:[u'2014Driver']
+06-02 21:43:01 replicate_layout.replicatelayout 260:Footprints on the sheets:
+[u'U2', u'U1']
+06-02 21:43:01 replicate_layout.replicatelayout 263:Footprints raw sheet ids:
+[u'/60C9AE58/60B64DF1', u'/60B644A9/60B64DF1']
+06-02 21:43:01 replicate_layout.replicatelayout 279:All sheets to replicate:
+[[u'sheet60C9AE4D'], [u'2014Driver']]
+06-02 21:43:01 replicate_layout.replicatelayout 284:All sheets to replicate sorted:
+[[u'2014Driver'], [u'sheet60C9AE4D']]
+06-02 21:43:01 replicate_layout.replicatelayout 290:All sheets to replicate sorted and without source sheet:
+[[u'sheet60C9AE4D']]
+06-02 21:43:19 replicate_layout.replicatelayout 249:construcing a list of sheets suitable for replication on level:u'2014Driver', file:u'2041Driver.sch'
+06-02 21:43:19 replicate_layout.replicatelayout 256:Source sheet path up to the level:[u'2014Driver']
+06-02 21:43:19 replicate_layout.replicatelayout 260:Footprints on the sheets:
+[u'U2', u'U1']
+06-02 21:43:19 replicate_layout.replicatelayout 263:Footprints raw sheet ids:
+[u'/60C9AE58/60B64DF1', u'/60B644A9/60B64DF1']
+06-02 21:43:19 replicate_layout.replicatelayout 279:All sheets to replicate:
+[[u'sheet60C9AE4D'], [u'2014Driver']]
+06-02 21:43:19 replicate_layout.replicatelayout 284:All sheets to replicate sorted:
+[[u'2014Driver'], [u'sheet60C9AE4D']]
+06-02 21:43:19 replicate_layout.replicatelayout 290:All sheets to replicate sorted and without source sheet:
+[[u'sheet60C9AE4D']]
+06-02 21:43:19 replicate_layout.action_replicate_layout 179:Replicating layout
+06-02 21:43:19 replicate_layout.replicatelayout 994:Starting replication of sheets: [[u'sheet60C9AE4D']]
+on level: [u'2014Driver']
+with tracks=True, zone=False, text=False, containing=True, remove=False, locked=False
+06-02 21:43:19 root 261:updating GUI message: 'Preparing for replication'
+06-02 21:43:19 root 266:updating GUI with: 0
+06-02 21:43:19 replicate_layout.replicatelayout 556:Getting the list of source footprints
+06-02 21:43:19 replicate_layout.replicatelayout 560:Getting the list of all the remaining footprints
+06-02 21:43:19 replicate_layout.replicatelayout 564:Getting nets local to source footprints
+06-02 21:43:19 replicate_layout.replicatelayout 568:Getting source bounding box
+06-02 21:43:19 root 266:updating GUI with: 37
+06-02 21:43:19 replicate_layout.replicatelayout 572:Getting source tracks
+06-02 21:43:19 replicate_layout.replicatelayout 576:Getting source zones
+06-02 21:43:19 root 266:updating GUI with: 62
+06-02 21:43:19 replicate_layout.replicatelayout 580:Getting source text items
+06-02 21:43:19 replicate_layout.replicatelayout 584:Getting source text items
+06-02 21:43:19 root 261:updating GUI message: 'Replicating footprints'
+06-02 21:43:19 replicate_layout.replicatelayout 590:Replicating footprints
+06-02 21:43:19 replicate_layout.replicatelayout 596:Replicating footprints on sheet [u'sheet60C9AE4D']
+06-02 21:43:19 root 266:updating GUI with: 52
+06-02 21:43:19 root 261:updating GUI message: 'Replicating tracks'
+06-02 21:43:19 replicate_layout.replicatelayout 720:Replicating tracks
+06-02 21:43:19 replicate_layout.replicatelayout 726:Replicating tracks on sheet [u'sheet60C9AE4D']
+06-02 21:43:19 root 266:updating GUI with: 0
+06-02 21:43:19 root 261:updating GUI message: 'Removing duplicates'
+06-02 21:43:20 replicate_layout.action_replicate_layout 201:Replication complete
