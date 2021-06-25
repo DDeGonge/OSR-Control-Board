@@ -14,6 +14,7 @@ struct TMC2041
 
     public:
     void set_pins(uint8_t en_pin, uint8_t cs_pin);
+    void configure();
     void enable_driver();
     void disable_driver();
 
@@ -31,7 +32,7 @@ struct TMC2041
     uint8_t CS_PIN;
 
     /* SPI functions */
-    SPISettings TMCspiSettings = SPISettings(4000000, MSBFIRST, SPI_MODE3); 
+    SPISettings TMCspiSettings = SPISettings(1000000, MSBFIRST, SPI_MODE3); 
     
     /* Addresses. Tuple if unique address for each stepper */
     uint8_t a_gconf = 0x00;
@@ -44,14 +45,64 @@ struct TMC2041
     uint8_t gconf[4] = {B00000000, B00000000, B00000000, B00000110};
 };
 
-/* Stepper object */
+/* Stepper driver object */
+struct TMC5160
+{
+    TMC5160() {};
+    TMC5160(uint8_t en_pin, uint8_t cs_pin);
+
+    public:
+    void set_pins(uint8_t en_pin, uint8_t cs_pin);
+    void configure();
+    void enable_driver();
+    void disable_driver();
+
+    /* Driver com functions */
+    void write_gconf();
+    uint8_t get_ihold_address();
+    uint8_t get_chop_address();
+    uint8_t get_cool_address();
+    uint8_t get_status_address();
+    void write_cmd(uint8_t addr, uint8_t chunk[4]);
+    int32_t read_cmd(uint8_t addr);
+
+    private:
+    uint8_t EN_PIN;
+    uint8_t CS_PIN;
+
+    /* SPI functions */
+    SPISettings TMCspiSettings = SPISettings(1000000, MSBFIRST, SPI_MODE3); 
+    
+    /* SPI Addresses. Tuple if unique address for each stepper */
+    uint8_t a_gconf = 0x00;
+    uint8_t a_gstat = 0x01;
+    uint8_t a_ioin = 0x04;
+    uint8_t a_sconf = 0x09;
+    uint8_t a_drvconf = 0x0A;
+    uint8_t a_drvcur = 0x0B;
+    uint8_t a_iholdirun = 0x10;
+    uint8_t a_chop = 0x6C;
+    uint8_t a_cool = 0x6D;
+    uint8_t a_status = 0x6F;
+
+    /* SPI default bitfields */
+    uint8_t gconf[4] = {B00000000, B00000000, B00000000, B00000110};
+};
+
+/* Stepper object, supports 2041 and 5160 driver types */
 struct TMCstep
 {
     TMCstep() {};
     TMCstep(uint8_t step_pin, uint8_t dir_pin, TMC2041 &my_driver, uint8_t motor_index, bool reverse = false);
+    TMCstep(uint8_t step_pin, uint8_t dir_pin, TMC5160 &my_driver, bool reverse = false);
 
     public:
-    TMC2041 driver;
+    uint8_t drv_type = 0;
+    TMC2041 driver_2041;  // Type 1
+    TMC5160 driver_5160;  // Type 2
+
+    void set_2041_default_bitfields();
+    void set_5160_default_bitfields();
 
     void set_pins(uint8_t step_pin, uint8_t dir_pin);
     void set_index(uint8_t index);
