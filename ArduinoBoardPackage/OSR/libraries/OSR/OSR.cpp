@@ -67,17 +67,13 @@ int32_t TMC2041::read_cmd(uint8_t addr)
 {
     SPI.beginTransaction(TMCspiSettings);
     digitalWrite(CS_PIN, LOW);
-    delay(1);
 
     SPI.transfer(addr);
     SPI.transfer16(0x0000);
     SPI.transfer16(0x0000);
 
-    delay(1);
     digitalWrite(CS_PIN, HIGH);
-    delay(1);
     digitalWrite(CS_PIN, LOW);
-    delay(1);
     
     uint8_t status_resp = SPI.transfer(addr);
     uint32_t out = SPI.transfer(0x00);
