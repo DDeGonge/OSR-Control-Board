@@ -9,6 +9,21 @@ TMC2041::TMC2041(uint8_t en_pin, uint8_t cs_pin)
     SPI.begin();
 }
 
+TMC2041::TMC2041(uint8_t en_pin, uint8_t cs_pin, bool single_motor_mode)
+{
+    set_pins(en_pin, cs_pin);
+
+    // Start SPI if it aint running
+    SPI.begin();
+
+    // TODO make this not so janky
+    if (single_motor_mode == true)
+    {
+        uint8_t new_gconf[4]  = {B00000000, B00000000, B00000000, B00000111};
+        std::copy(std::begin(new_gconf), std::end(new_gconf), std::begin(gconf));
+    }
+}
+
 void TMC2041::set_pins(uint8_t en_pin, uint8_t cs_pin)
 {
     // Save and set up CS and enable pins
@@ -24,7 +39,7 @@ void TMC2041::configure()
 {
     // Configure driver with defaults and enable driver (not motors)
     write_gconf();
-    enable_driver();
+    enable_driver();  // HW pin will be left enabled, disable individual motors with SPI commands
 }
 
 // Public - enable stepper driver
@@ -51,12 +66,12 @@ void TMC2041::write_cmd(uint8_t addr, uint8_t chunk[4])
     SPI.endTransaction();
     digitalWrite(CS_PIN, HIGH);
 
-    Serial.print(addr, HEX);
-    for(uint8_t j = 0; j < 4; j++)
-    {
-        Serial.print("\t");
-        Serial.print(chunk[j], BIN);
-    }
+    // Serial.print(addr, HEX);
+    // for(uint8_t j = 0; j < 4; j++)
+    // {
+    //     Serial.print("\t");
+    //     Serial.print(chunk[j], BIN);
+    // }
     int32_t verifychunk = read_cmd(addr);
     Serial.print("\t");
     Serial.print(verifychunk, BIN);
@@ -139,7 +154,6 @@ void TMC5160::configure()
 {
     // Configure driver with defaults and enable driver (not motors)
     write_gconf();
-    enable_driver();
 }
 
 // Public - enable stepper driver
@@ -165,17 +179,6 @@ void TMC5160::write_cmd(uint8_t addr, uint8_t chunk[4])
 
     SPI.endTransaction();
     digitalWrite(CS_PIN, HIGH);
-
-    Serial.print(addr, HEX);
-    for(uint8_t j = 0; j < 4; j++)
-    {
-        Serial.print("\t");
-        Serial.print(chunk[j], BIN);
-    }
-    int32_t verifychunk = read_cmd(addr);
-    Serial.print("\t");
-    Serial.print(verifychunk, BIN);
-    Serial.println();
 }
 
 int32_t TMC5160::read_cmd(uint8_t addr)
@@ -188,6 +191,7 @@ int32_t TMC5160::read_cmd(uint8_t addr)
     SPI.transfer16(0x0000);
 
     digitalWrite(CS_PIN, HIGH);
+    delayMicroseconds(10);
     digitalWrite(CS_PIN, LOW);
     
     uint8_t status_resp = SPI.transfer(addr);
@@ -230,6 +234,21 @@ uint8_t TMC5160::get_status_address()
     return a_status;
 }
 
+uint8_t TMC5160::get_gstat_address()
+{
+    return a_gstat;
+}
+
+uint8_t TMC5160::get_tpowerdown_address()
+{
+    return a_tpowerdown;
+}
+
+uint8_t TMC5160::get_tpwmthrs_address()
+{
+    return a_tpwmthrs;
+}
+
 
 TMCstep::TMCstep(uint8_t step_pin, uint8_t dir_pin, TMC2041 &my_driver, uint8_t motor_index, bool reverse)
 {
@@ -254,10 +273,18 @@ TMCstep::TMCstep(uint8_t step_pin, uint8_t dir_pin, TMC5160 &my_driver, bool rev
     drv_type = 2;
     reversed = reverse;
 
+    set_5160_default_bitfields();
+
     // Write initial configuration
     write_iholdirun();
     write_chop();
     write_cool();
+
+    uint8_t tpowerdown[4] = {B00000000, B00000000, B00000000, B00001010};
+    driver_5160.write_cmd(driver_5160.get_tpowerdown_address(), tpowerdown);
+
+    uint8_t tpwmthrs[4] = {B00000000, B00000000, B00000001, B11110100};
+    driver_5160.write_cmd(driver_5160.get_tpwmthrs_address(), tpwmthrs);
 }
 
 
@@ -274,8 +301,8 @@ void TMCstep::set_2041_default_bitfields()
 
 void TMCstep::set_5160_default_bitfields()
 {
-    uint8_t new_ihold[4] = {B00000000, B00000001, B00010000, B00001000};
-    uint8_t new_chop[4]  = {B00000010, B00000001, B00000000, B00000011};
+    uint8_t new_ihold[4] = {B00000000, B00000001, B00011110, B00001000};
+    uint8_t new_chop[4]  = {B00000010, B00000001, B00000000, B00001001};
     uint8_t new_cool[4]  = {B00000000, B00000110, B00000000, B00000000};
 
     std::copy(std::begin(new_ihold), std::end(new_ihold), std::begin(ihold));
@@ -342,15 +369,31 @@ bool TMCstep::get_dir()
 
 void TMCstep::enable()
 {
-    chop[3] = saved_chop;
-    write_chop();
+    if (drv_type == 1)
+    {
+        chop[3] = saved_chop;
+        write_chop();
+    }
+    else if (drv_type == 2)
+    {
+        driver_5160.enable_driver();
+    }
+    
 }
 
 void TMCstep::disable()
 {
-    saved_chop = chop[3];
-    chop[3] = 0x00;
-    write_chop();
+    if (drv_type == 1)
+    {
+        saved_chop = chop[3];
+        chop[3] = 0x00;
+        write_chop();
+    }
+    else if (drv_type == 2)
+    {
+        driver_5160.disable_driver();
+    }
+    
 }
 
 void TMCstep::write_iholdirun()
@@ -411,6 +454,11 @@ uint32_t TMCstep::get_stall_value()
     return status_bits & 0x000003FF;
 }
 
+uint32_t TMCstep::debug_print_status()
+{
+    return status_bits;
+}
+
 void TMCstep::set_hold_current(uint8_t newval)
 {
     newval = newval > 31 ? 31 : newval;
@@ -450,6 +498,7 @@ motorDrive::motorDrive(TMCstep &new_stepper, int32_t steps_per_mm_new)
 {
     stepper = new_stepper;
     set_steps_per_mm(steps_per_mm_new);
+    zero();
 }
 
 // Public - Update stepper default velocity in mm/s if input is not NOVALUE
@@ -501,7 +550,7 @@ void motorDrive::set_pos_target_mm_async(double target, float feedrate)
 // Public - Plan and execute acceleration profile Will stay in loop until move is complete
 void motorDrive::set_pos_target_mm_sync(double target, float feedrate, bool ignore_limits)
 {
-    plan_move(target, feedrate, ignore_limits=ignore_limits);
+    plan_move(target, feedrate, NOVALUE, ignore_limits);
     execute_move_async();
     while (true)
     {

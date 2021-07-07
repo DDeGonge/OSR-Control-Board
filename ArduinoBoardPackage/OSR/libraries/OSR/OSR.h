@@ -11,6 +11,7 @@ struct TMC2041
 {
     TMC2041() {};
     TMC2041(uint8_t en_pin, uint8_t cs_pin);
+    TMC2041(uint8_t en_pin, uint8_t cs_pin, bool single_motor_mode);
 
     public:
     void set_pins(uint8_t en_pin, uint8_t cs_pin);
@@ -63,6 +64,9 @@ struct TMC5160
     uint8_t get_chop_address();
     uint8_t get_cool_address();
     uint8_t get_status_address();
+    uint8_t get_gstat_address();
+    uint8_t get_tpowerdown_address();
+    uint8_t get_tpwmthrs_address();
     void write_cmd(uint8_t addr, uint8_t chunk[4]);
     int32_t read_cmd(uint8_t addr);
 
@@ -84,9 +88,12 @@ struct TMC5160
     uint8_t a_chop = 0x6C;
     uint8_t a_cool = 0x6D;
     uint8_t a_status = 0x6F;
+    uint8_t a_tpowerdown = 0x11;
+    uint8_t a_tpwmthrs = 0x13;
 
     /* SPI default bitfields */
-    uint8_t gconf[4] = {B00000000, B00000000, B00000000, B00000110};
+    // uint8_t gconf[4] = {B00000000, B00000000, B00000000, B00001100};
+    uint8_t gconf[4] = {B00000000, B00000000, B00000000, B00001000};  // take3
 };
 
 /* Stepper object, supports 2041 and 5160 driver types */
@@ -127,6 +134,7 @@ struct TMCstep
     void write_chop();
     void write_cool();
     void update_motor_status();
+    uint32_t debug_print_status();
 
     /* Sensorless homing stuff */
     bool get_stallguard();
@@ -157,6 +165,7 @@ struct TMCstep
 };
 
 /* Stepper motor wrapper to handle motion profiles */
+// TODO simplify this and merge with TMCstep
 struct motorDrive
 {
     motorDrive(TMCstep &new_stepper, int32_t steps_per_mm_new);
